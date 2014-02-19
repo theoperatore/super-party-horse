@@ -3,44 +3,53 @@
 
 Handles setting up game inputs and eventListeners for any game input.
 
-might split this class into two files, this one handles init input listeners, 
-and another handles resolving those events.
+******************************************************************************/
+var Input = function Input(name, keyCode, callback, keyup) {
+	this.name = name;
+	this.keyCode = keyCode;
+	this.keydownCallback = callback || function() {};
+	this.keyupCallback = keyup || function() {};
+}
+
+
+/******************************************************************************
+
+Structure to hold Input objects. 
 
 ******************************************************************************/
-exports.init = function(canvas) {
+var inputs = [];
+
+
+exports.init = function() {
+
 	document.addEventListener('keydown', function(ev) {
-		//left
-		if (ev.keyCode === 65 ) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			console.log("left");
-		}
-		//down
-		else if (ev.keyCode === 83) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			console.log("down");
-		}
-		//right
-		else if (ev.keyCode === 68) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			console.log("right");
-		}
-		//up
-		else if (ev.keyCode === 87) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			console.log("up");
-		}
-
-	});
-
-	document.addEventListener('mousedown', function(ev) {
+		
 		ev.preventDefault();
 		ev.stopPropagation();
-		console.log('mousedown', ev);
+
+		var tmpInput = inputs[ev.keyCode] || 'undefined';
+
+		(tmpInput !== 'undefined') ? tmpInput.keydownCallback() : console.log('undefined keydown');
+
 	});
+
+	document.addEventListener('keyup', function(ev) {
+		ev.preventDefault();
+		ev.stopPropagation();
+
+		var tmpInput = inputs[ev.keyCode] || 'undefined';
+
+		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup');
+	});
+}
+
+exports.addInput = function(name, keyCode, keydownCallback, keyupCallback) {
+	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() { };
+	keyupCallback = (typeof keyupCallback === 'function') ? keyupCallback : function() {};
+
+	var newInput = new Input(name, keyCode, keydownCallback, keyupCallback);
+
+	inputs[keyCode] = newInput;
 }
 },{}],2:[function(require,module,exports){
 /******************************************************************************
@@ -135,9 +144,6 @@ var Entity = function Entity() {
 	this.vel = vect.create(0,0);
 	this.accel = vect.create(0,0);
 	this.prev_pos = vect.create(0,0);
-	this.prev_vel = vect.create(0,0);
-	this.prev_accel = vect.create(0,0);
-	this.prev_dt = 1;
 	this.mass = 5;
 	this.maxhp = 100;
 	this.currhp = 100;
@@ -145,13 +151,10 @@ var Entity = function Entity() {
 	this.equipment = {};
 	this.upgrades = {};
 	this.type = "entity";
+	this.direction = 'left';
 	this.animations = {
-		'up'    : new Animation(),
-		'right' : new Animation(),
-		'down'  : new Animation(),
 		'left'  : new Animation()
 	};
-	this.direction = 'down';
 	this.drawOptions = {
 		scaledWidth  : 0.5,
 		scaledHeight : 0.5
@@ -163,26 +166,28 @@ Entity.prototype.addFrame = function(animation, path, ms, callback) {
 	anim.addFrame(path, ms, callback);
 	this.animations[animation] = anim;
 
-	console.log(this.animations);
+	//console.log(this.animations);
 };
 
-/***********************************************
+/******************************************************************************
 
-Doesn't properly handle acceleration
+Seems like acceleration is acting like veloctiy....
 
-************************************************/
+******************************************************************************/
 Entity.prototype.updateVerlet = function(dt) {
 
-	dt = (dt === 0) ? 1 : dt;
+	this.vel.x = (2 * this.pos.x) - this.prev_pos.x;
 
-	//time corrected verlet integration technique -- assumes constant acceleration
-	this.pos.x = this.pos.x + ((this.pos.x - this.prev_pos.x) * (dt / this.prev_dt)) + 0.5 * (this.accel.x * (dt * dt));
-	this.pos.y = this.pos.y + ((this.pos.y - this.prev_pos.y) * (dt / this.prev_dt)) + 0.5 * (this.accel.y * (dt * dt));
-	console.log(this.pos.y);
+	console.log(this.vel.x);
+
+	this.pos.x = (2 * this.pos.x) - this.prev_pos.x + this.accel.x * dt * dt;
+	this.pos.y = (2 * this.pos.y) - this.prev_pos.y + this.accel.y * dt * dt;
 
 	this.prev_pos.x = this.pos.x;
 	this.prev_pos.y = this.pos.y;
-	this.prev_dt = dt;
+
+	//update animations
+	this.animations[this.direction].update(dt);
 };
 
 Entity.prototype.updateRungeKutta = function(dt, stepsize) {
@@ -196,22 +201,22 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 
 	//calculate new x
 	k1 =  this.vel.x + this.accel.x *  dt;
-	k2 = (this.vel.x + h*k1/2) + (this.accel.x * (dt + h/2));
-	k3 = (this.vel.x + h*k2/2) + (this.accel.x * (dt + h/2));
-	k4 = (this.vel.x + h*k3)   + (this.accel.x * (dt + h));
+	k2 = (this.vel.x + k1/2) + (this.accel.x * (dt/2));
+	k3 = (this.vel.x + k2/2) + (this.accel.x * (dt/2));
+	k4 = (this.vel.x + k3)   + (this.accel.x * (dt));
 
 	//update pos x and vel x
-	this.pos.x += (h/6) * (k1 + (2 * k2) + (2 * k3) + k4);
+	this.pos.x += (dt/6) * (k1 + (2 * k2) + (2 * k3) + k4);
 	this.vel.x += this.accel.x * dt;
 
 	//calculate new y
 	k1 =  this.vel.y + this.accel.y *  dt;
-	k2 = (this.vel.y + h*k1/2) + (this.accel.y * (dt + h/2));
-	k3 = (this.vel.y + h*k2/2) + (this.accel.y * (dt + h/2));
-	k4 = (this.vel.y + h*k3)   + (this.accel.y * (dt + h));
+	k2 = (this.vel.y + k1/2) + (this.accel.y * (dt + dt/2));
+	k3 = (this.vel.y + k2/2) + (this.accel.y * (dt + dt/2));
+	k4 = (this.vel.y + k3)   + (this.accel.y * (dt));
 
 	//update new y
-	this.pos.y += (h/6) * (k1 + (2 * k2) + (2 * k3) + k4);
+	this.pos.y += (dt/6) * (k1 + (2 * k2) + (2 * k3) + k4);
 	this.vel.y += this.accel.y * dt;
 
 	//update animations
@@ -262,7 +267,7 @@ var canvas = document.getElementById('playground'),
 
 player1.pos.y = 100;
 //player1.pos.x = canvas.width;
-//player1.accel.x = -0.01;
+//player1.accel.x = 0.001;
 
 player1.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
 	playerLeftLoaded = true;
@@ -274,9 +279,32 @@ player1.addFrame('right', "./src/resources/donkey-fly-right.png", 500, function(
 	console.log(ev);
 });
 
+player1.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
+	console.log(ev);
+});
+
+player1.addFrame('left', "./src/resources/donkey-fly-left.png", 500, function(ev) {
+	console.log(ev);
+});
+
 player1.direction = "right";
 
-Input.init(canvas);
+Input.init();
+
+Input.addInput('left', 65, function() {
+	player1.accel.x = -0.0001;
+	player1.direction = 'left';
+});
+Input.addInput('right', 68, function() {
+	player1.accel.x = 0.0001;
+	player1.direction = 'right';
+});
+Input.addInput('up', 87, function() {
+	player1.accel.y = -0.0001;
+});
+Input.addInput('down', 83, function() {
+	player1.accel.y = 0.0001;
+});
 
 
 var count = 0;
@@ -288,7 +316,10 @@ var loop = function() {
 	prev = now;
 
 	if (playerLeftLoaded && playerRightLoaded) {
-		player1.updateRungeKutta(dt, 0.2);
+		//player1.updateVerlet(dt);
+		player1.updateRungeKutta(dt);
+
+
 
 		player1.draw(ctx);
 	}
