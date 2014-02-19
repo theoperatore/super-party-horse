@@ -10,12 +10,14 @@ var rend = {
 	player : null,
 	enemies : [],
 	npcs : [],
+	interactables : [],
 	level : '1',
 	scenery : {
 		background : null,
 		backdrop : null,
 		foreground : null
-	}
+	},
+	state : null,
 };
 
 /******************************************************************************
@@ -27,6 +29,7 @@ exports.init = function(context, width, height) {
 	rend.ctx = context;
 	rend.width = width;
 	rend.height = height;
+	rend.state = new State('title');
 }
 
 /******************************************************************************
@@ -74,26 +77,77 @@ exports.addNPCToRenderer = function(npc) {
 
 /******************************************************************************
 
+Add interactable to renderer; single or an array
+
+******************************************************************************/
+exports.addInteractable = function(interactable) {
+	if (typeof interactable === 'entity') {
+		rend.interactables.push(interactable);
+	}
+
+	else if (interactable.length) {
+		for (var i = 0; i < interactable.length; i++) {
+			rend.interactables.push(interactable[i]);
+		}
+	}
+}
+
+/******************************************************************************
+
 Draw all setup objects to the screen
 
 ******************************************************************************/
-exports.draw = function() {
+exports.draw = function(state) {
 
-	//clear the canvas
-	rend.ctx.clearRect(0, 0, rend.width, rend.height);
+	//must be told which state to render
 
-	//draw backdrop ... parallax?
+	if (rend.ctx != null) {
 
-	//draw background
+		//clear the canvas
+		rend.ctx.clearRect(0, 0, rend.width, rend.height);
 
-	//draw npcs
+		//draw backdrop ... parallax?
+		if (rend.scenery.backdrop != null) {
 
-	//draw interactables ... powerups?
+		}
 
-	//draw enemies
+		//draw background
+		if (rend.scenery.background != null) {
 
-	//draw player including upgrades
+		}
 
-	//draw foreground
+		//draw npcs
+		if (rend.npcs.length > 0) {
+
+		}
+
+		//draw interactables ... powerups?
+		if (rend.interactables.length > 0) {
+
+		}
+
+		//draw enemies
+		if (rend.enemies.length > 0) {
+
+		}
+
+		//draw player including upgrades
+		if (rend.player != null) {
+
+		}
+
+		//draw foreground
+		if (rend.scenery.foreground != null) {
+
+		}
+
+		//draw hud
+		if (rend.hud != null) {
+
+		}
+	}
+	else {
+		console.log('drawing ontext is not set!');
+	}
 
 }
