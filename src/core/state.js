@@ -1,4 +1,5 @@
-var inputManager = require('./input-manager');
+var inputManager = require('./input-manager'),
+    imageManager = require('./image');
 
 
 /******************************************************************************
@@ -92,6 +93,56 @@ State.prototype.addInput = function(name, keyCode, keydownCallback, keyupCallbac
 	this.inputs.push(inputManager.createInput(name, keyCode, keydownCallback, keyupCallback));
 };
 
+/******************************************************************************
+
+Load img for the backdrop for this state
+
+******************************************************************************/
+State.prototype.setBackdrop = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.backdrop = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
+
+/******************************************************************************
+
+Load img for background for this state
+
+******************************************************************************/
+State.prototype.setBackground = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.background = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
+
+/******************************************************************************
+
+Load img for the foreground for this state
+
+******************************************************************************/
+State.prototype.setForeground = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.foreground = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
 
 //export the State constructor
 module.exports = State;

@@ -67,7 +67,7 @@ exports.draw = function(gameState) {
 
 			//draw background
 			if (renderState.scenery.background != null) {
-
+				rend.ctx.drawImage(renderState.scenery.background, 0, 0);
 			}
 
 			//draw npcs
@@ -94,7 +94,7 @@ exports.draw = function(gameState) {
 
 			//draw foreground
 			if (renderState.scenery.foreground != null) {
-
+				rend.ctx.drawImage(renderState.scenery.foreground, 0, 300);
 			}
 
 			//draw hud

@@ -1,6 +1,71 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /******************************************************************************
 
+Handles loading stationary images such as backgrounds, backdrops,
+and foreground elements.
+
+******************************************************************************/
+/******************************************************************************
+
+Loads in one image from the filepath
+
+******************************************************************************/
+exports.loadImg = function(path, callback) {
+	var img = new Image();
+
+	img.addEventListener('load', function(ev) {
+		console.log("image loaded", path, ev);
+
+
+		if (typeof callback === 'function') {
+			callback(img);
+		}
+
+	});
+
+	img.src = path;
+}
+
+/******************************************************************************
+
+Loads all images and calls the callback once all have been loaded.
+The callback will have the loaded images...
+
+NEED TO FIND A WAY TO HAVE THESE INDEXED BY NAME. CAN'T GUARANTEE IMGs
+WILL BE IN THE SAME ORDER THAT THEY ARE SPECIFED IN THE PATHS
+
+Right now paths must be an array. Object batchLoad will come later.
+
+******************************************************************************/
+exports.batchLoad = function(paths, callback) {
+
+	//holds all loaded images
+	var out = [];
+
+	for (var i = 0; i < paths.length; i++) {
+		var tmpImg = new Image();
+
+		tmpImg.addEventListner('load', function(ev) {
+			out.push(tmpImg);
+
+			if (out.length === paths.length) {
+
+				if (typeof callback === 'function') {
+					callback(out);
+				}
+				else {
+					console.log('images loaded but callback not specified!');
+				}
+			}
+
+		});
+
+		tmpImg.src = paths[i];
+	}
+}
+},{}],2:[function(require,module,exports){
+/******************************************************************************
+
 Handles setting up game inputs and eventListeners for any game input.
 
 ******************************************************************************/
@@ -86,7 +151,7 @@ exports.createInput = function(name, keyCode, keydownCallback, keyupCallback) {
 
 	return new Input(name, keyCode, keydownCallback, keyupCallback);
 }
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -156,7 +221,7 @@ exports.draw = function(gameState) {
 
 			//draw background
 			if (renderState.scenery.background != null) {
-
+				rend.ctx.drawImage(renderState.scenery.background, 0, 0);
 			}
 
 			//draw npcs
@@ -183,7 +248,7 @@ exports.draw = function(gameState) {
 
 			//draw foreground
 			if (renderState.scenery.foreground != null) {
-
+				rend.ctx.drawImage(renderState.scenery.foreground, 0, 300);
 			}
 
 			//draw hud
@@ -200,8 +265,9 @@ exports.draw = function(gameState) {
 	}
 
 }
-},{}],3:[function(require,module,exports){
-var inputManager = require('./input-manager');
+},{}],4:[function(require,module,exports){
+var inputManager = require('./input-manager'),
+    imageManager = require('./image');
 
 
 /******************************************************************************
@@ -295,12 +361,62 @@ State.prototype.addInput = function(name, keyCode, keydownCallback, keyupCallbac
 	this.inputs.push(inputManager.createInput(name, keyCode, keydownCallback, keyupCallback));
 };
 
+/******************************************************************************
+
+Load img for the backdrop for this state
+
+******************************************************************************/
+State.prototype.setBackdrop = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.backdrop = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
+
+/******************************************************************************
+
+Load img for background for this state
+
+******************************************************************************/
+State.prototype.setBackground = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.background = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
+
+/******************************************************************************
+
+Load img for the foreground for this state
+
+******************************************************************************/
+State.prototype.setForeground = function(path, callback) {
+	var state = this;
+
+	imageManager.loadImg(path, function(img) {
+		state.scenery.foreground = img;
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+	});
+};
 
 //export the State constructor
 module.exports = State;
 
 
-},{"./input-manager":1}],4:[function(require,module,exports){
+},{"./image":1,"./input-manager":2}],5:[function(require,module,exports){
 /******************************************************************************
 
 Private inner 'class' that represents one frame in an animation
@@ -396,7 +512,7 @@ Animation.prototype.start = function() {
 module.exports = Animation;
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /******************************************************************************
 
 Describes any interactable object in the game. Can't decide yet if everything
@@ -531,7 +647,7 @@ Entity.prototype.draw = function(ctx) {
 
 //export the Entity constructor
 module.exports = Entity;
-},{"../utilities/vector2D":7,"./animation":4}],6:[function(require,module,exports){
+},{"../utilities/vector2D":8,"./animation":5}],7:[function(require,module,exports){
 /******************************************************************************
 
 This file brings together all of the different engines to make a game run.
@@ -565,15 +681,17 @@ GameState = require("./core/state"),
 
 ******************************************************************************/
 Input = require('./core/input-manager'),
-Renderer = require("./core/renderer");
+Renderer = require("./core/renderer"),
 
 /******************************************************************************
 
 	Main Instance Vars
 
 ******************************************************************************/
-player = new Entity();
-state = new GameState('title');
+player = new Entity(),
+state = new GameState('title'),
+game = new GameState('game');
+
 
 function init() {
 	//setup player
@@ -597,6 +715,8 @@ function init() {
 
 	player.direction = "right";
 
+
+	var count = 0;
 	//setup inputs
 	Input.init();
 	Input.addInput('left', 65, function() {
@@ -613,9 +733,16 @@ function init() {
 	Input.addInput('down', 83, function() {
 		player.accel.y = 0.0001;
 	});
+	Input.addInput('switchGameStates', 74, function() {
+		(count % 2 === 0) ? Renderer.useState(game) : Renderer.useState(state);
+
+		count++;
+	})
 
 	//set up initial game state
 	state.addPlayerToState(player);
+	state.setBackground("./src/resources/grass-background.png");
+	state.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
 	Renderer.init(ctx, canvas.width, canvas.height, state);
@@ -637,9 +764,9 @@ function update() {
 //initialize game!
 init();
 
-//start main game loop!
+//start main game!
 requestAnimationFrame(update);
-},{"./core/input-manager":1,"./core/renderer":2,"./core/state":3,"./entity/entity":5}],7:[function(require,module,exports){
+},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6}],8:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -738,4 +865,4 @@ exports.magnitude = function(v1) {
 exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
-},{}]},{},[6])
+},{}]},{},[7])
