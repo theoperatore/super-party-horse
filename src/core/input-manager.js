@@ -54,6 +54,9 @@ exports.init = function() {
 
 Handles adding a new game input. 
 
+WARNING: This function overrides whatever the previously associated
+keyCode - Callback pairing...
+
 Params:
 
 name    -- String name of input. ex. 'moveLeft', 'jump', 'attack', etc...
@@ -63,10 +66,22 @@ keyupCallback   -- function to be called when this key is released
 
 ******************************************************************************/
 exports.addInput = function(name, keyCode, keydownCallback, keyupCallback) {
-	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() { };
+	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
 	keyupCallback = (typeof keyupCallback === 'function') ? keyupCallback : function() {};
 
 	var newInput = new Input(name, keyCode, keydownCallback, keyupCallback);
 
 	inputs[keyCode] = newInput;
+}
+
+/******************************************************************************
+
+Creates and Returns a new instance of Input; mainly used in game states
+
+******************************************************************************/
+exports.createInput = function(name, keyCode, keydownCallback, keyupCallback) {
+	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
+	keyupCallback = (typeof keyupCallback === 'function') ? keyupCallback : function() {};
+
+	return new Input(name, keyCode, keydownCallback, keyupCallback);
 }

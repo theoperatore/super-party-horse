@@ -36,6 +36,12 @@ var Entity = function Entity() {
 	};
 }
 
+/******************************************************************************
+
+Adds a frame to the specified animation given by name. If the animation name 
+doesn't yet exist for this entity, one is automatically created.
+
+******************************************************************************/
 Entity.prototype.addFrame = function(animation, path, ms, callback) {
 	var anim = this.animations[animation] || new Animation();
 	anim.addFrame(path, ms, callback);
@@ -65,6 +71,13 @@ Entity.prototype.updateVerlet = function(dt) {
 	this.animations[this.direction].update(dt);
 };
 
+
+/******************************************************************************
+
+Definitely works as intended, but I have no idea if this is truly utilizing
+Runge-Kutta properly...
+
+******************************************************************************/
 Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	//f  := 0.5*a*t^2 + v*t + x(n-1);
 	//f` := a*t + v;
@@ -98,13 +111,24 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	this.animations[this.direction].update(dt);
 };
 
+/******************************************************************************
+
+Draw this entity to the screen with the given context
+
+******************************************************************************/
 Entity.prototype.draw = function(ctx) {
-	ctx.drawImage(this.animations[this.direction].getCurrImg(), 
-	              this.pos.x, 
-	              this.pos.y, 
-	              this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth, 
-	              this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
-	             );	
+	var img = this.animations[this.direction].getCurrImg();
+
+	if (img != null) {
+		ctx.drawImage(img, 
+		              this.pos.x, 
+		              this.pos.y, 
+		              this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth, 
+		              this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
+		             );	
+	}
 };
 
+
+//export the Entity constructor
 module.exports = Entity;

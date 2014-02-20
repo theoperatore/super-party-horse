@@ -24,13 +24,23 @@ exports.init = function(context, width, height, state) {
 
 /******************************************************************************
 
-Changes the current game state to the provided state; if the provided state is
-not of the type 'state',  the game stat will not be changed
+Handles switching from gamestate to gamestate, but only for rendering purposes.
+Changing inputs for new gamestates is handled elsewhere. 
+
+This function always assumes that the current underlying gamestate is the 
+most recent, so the player will always be passed from the current gamestate
+to the new gamestate
+
+DUNNO IF THIS IS ACDTUALLY WORTH DOING...
 
 ******************************************************************************/
-exports.changeState = function(newState) {
-	newState = (typeof newState === 'state') ? newState || rend.state;
-	rend.state = newState;
+exports.useState = function(newState) {
+	if (typeof newState != 'undefined') {
+		var tmpPlayer = rend.state.player;
+
+		rend.state = newState;
+		rend.state.player = tmpPlayer;
+	}
 }
 
 /******************************************************************************
@@ -38,52 +48,57 @@ exports.changeState = function(newState) {
 Draw all setup objects to the screen
 
 ******************************************************************************/
-exports.draw = function() {
+exports.draw = function(gameState) {
+
+	//a passed in gameState trumps the stored gamestat
+	renderState = gameState || rend.state;
 
 	if (rend.ctx != null) {
 
-		if (rend.state != null) {
+		if (renderState != null) {
 
 			//clear the canvas
 			rend.ctx.clearRect(0, 0, rend.width, rend.height);
 
 			//draw backdrop ... parallax?
-			if (rend.state.scenery.backdrop != null) {
+			if (renderState.scenery.backdrop != null) {
 
 			}
 
 			//draw background
-			if (rend.state.scenery.background != null) {
+			if (renderState.scenery.background != null) {
 
 			}
 
 			//draw npcs
-			if (rend.state.npcs.length > 0) {
+			if (renderState.npcs.length > 0) {
 
 			}
 
 			//draw interactables ... powerups?
-			if (rend.state.interactables.length > 0) {
+			if (renderState.interactables.length > 0) {
 
 			}
 
 			//draw enemies
-			if (rend.state.enemies.length > 0) {
+			if (renderState.enemies.length > 0) {
 
 			}
 
 			//draw player including upgrades
-			if (rend.state.player != null) {
+			if (renderState.player != null) {
 
+				//draw the base of the character
+				renderState.player.draw(rend.ctx);
 			}
 
 			//draw foreground
-			if (rend.state.scenery.foreground != null) {
+			if (renderState.scenery.foreground != null) {
 
 			}
 
 			//draw hud
-			if (rend.state.hud != null) {
+			if (renderState.hud != null) {
 
 			}
 		}
@@ -92,7 +107,7 @@ exports.draw = function() {
 		}
 	}
 	else {
-		console.log('drawing ontext is not set!');
+		console.log('drawing context is not set!');
 	}
 
 }

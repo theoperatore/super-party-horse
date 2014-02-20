@@ -28,8 +28,12 @@ exports.loadImg = function(path, callback) {
 /******************************************************************************
 
 Loads all images and calls the callback once all have been loaded.
+The callback will have the loaded images...
 
-Right now paths must be an array. Object batchLoad will come later
+NEED TO FIND A WAY TO HAVE THESE INDEXED BY NAME. CAN'T GUARANTEE IMGs
+WILL BE IN THE SAME ORDER THAT THEY ARE SPECIFED IN THE PATHS
+
+Right now paths must be an array. Object batchLoad will come later.
 
 ******************************************************************************/
 exports.batchLoad = function(paths, callback) {
