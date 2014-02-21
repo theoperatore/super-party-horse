@@ -15,8 +15,8 @@ html, body { height: 100%; }
 body {
   background-color: #333;
   font-family: sans-serif;
-  padding-left: 1em;
-  padding-right: 1em;
+  padding-left: 3em;
+  padding-right: 3em;
   font-size: small;
   text-align: center;
 }
