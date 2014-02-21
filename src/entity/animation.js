@@ -29,6 +29,9 @@ var Animation = function Animation() {
 	this.totalTime = 0;
 	this.currTime = 0;
 	this.currIndex = 0;
+	this.completed = false;
+	this.loop = true;
+	this.completedCallback;
 }
 
 /******************************************************************************
@@ -37,12 +40,21 @@ Add a frame to this animation. This function accepts only strings paths to
 images.
 
 ******************************************************************************/
-Animation.prototype.addFrame = function(path, ms, callback) {
-	var frame = new _Frame(path, ms, callback);
+Animation.prototype.addFrame = function(path, ms, loadCallback) {
+	var frame = new _Frame(path, ms, loadCallback);
 
 	this._frames.push(frame);
 	this.numFrames++;
 	this.totalTime += ms;
+};
+
+/******************************************************************************
+
+Add a callback function to be called when this animation is completed.
+
+******************************************************************************/
+Animation.prototype.addAnimationCompletedCallback = function(callback) {
+	this.completedCallback = (typeof callback === 'function') ? callback : function() { console.log ('callback not a function'); };
 };
 
 /******************************************************************************
@@ -65,6 +77,19 @@ Animation.prototype.update = function(dt) {
 			//and increase index to the next frame
 			this.currIndex++;
 		}
+
+		//check for a completed animation
+		if (this.currIndex >= this.numFrames) {
+			if (this.loop) {
+				this.currIndex = 0;
+			}
+			else {
+				this.completed = true;
+				this.currIndex = this.numFrames - 1;
+				this.reset();
+				this.completedCallback();
+			}
+		}
 	}
 };
 
@@ -76,15 +101,17 @@ resetting the animation index if the animation is over; looping the animation
 ******************************************************************************/
 Animation.prototype.getCurrImg = function() {
 	this.currIndex = (this.currIndex >= this.numFrames) ? 0 : this.currIndex;
+
+
 	return this._frames[this.currIndex].img || null;
 };
 
 /******************************************************************************
 
-Synonymous with 'RESET', this function starts/restarts the current animation
+This function starts/restarts the current animation
 
 ******************************************************************************/
-Animation.prototype.start = function() {
+Animation.prototype.reset = function() {
 	this.currTime = 0;
 	this.currIndex = 0;
 };

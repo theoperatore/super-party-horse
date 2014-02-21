@@ -31,7 +31,7 @@ This function always assumes that the current underlying gamestate is the
 most recent, so the player will always be passed from the current gamestate
 to the new gamestate
 
-DUNNO IF THIS IS ACDTUALLY WORTH DOING...
+DUNNO IF THIS IS ACTUALLY WORTH DOING...
 
 ******************************************************************************/
 exports.useState = function(newState) {

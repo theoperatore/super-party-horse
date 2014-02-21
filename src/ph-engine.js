@@ -1,13 +1,5 @@
 /******************************************************************************
 
-This file brings together all of the different engines to make a game run.
-This is the game core; holds the main game loop
-
-******************************************************************************/
-
-
-/******************************************************************************
-
 	Core Vars
 
 ******************************************************************************/
@@ -39,69 +31,104 @@ Renderer = require("./core/renderer"),
 
 ******************************************************************************/
 player = new Entity(),
-state = new GameState('title'),
+title = new GameState('title'),
 game = new GameState('game');
-
 
 function init() {
 	//setup player
 	player.pos.y = 100;
+	player.pos.x = 100;
 
 	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
 		console.log(ev);
 	});
-
-	player.addFrame('right', "./src/resources/donkey-fly-right.png", 500, function(ev) {
-		console.log(ev);
-	});
-
 	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
 		console.log(ev);
 	});
 
-	player.addFrame('left', "./src/resources/donkey-fly-left.png", 500, function(ev) {
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-start-right.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-middle-right.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400, function(ev) {
 		console.log(ev);
 	});
 
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-start-left.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-middle-left.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400, function(ev) {
+		console.log(ev);
+	});
+
+	player.addAnimationCompletedCallback('attack-right', function() {
+		console.log('attack-right completed');
+		player.dirLock = false;
+		player.direction = 'right';
+	});
+
+	player.addAnimationCompletedCallback('attack-left', function() {
+		console.log('attack-left completed');
+		player.dirLock = false;
+		player.direction = 'left';
+	});
+
+	player.setAnimationLoop('attack-left', false);
+	player.setAnimationLoop('attack-right', false);
+
 	player.direction = "right";
-
-
-	var count = 0;
-	//setup inputs
 
 	//init with initial game state inputs?
 	Input.init();
-	Input.addInput('left', 65, function() {
-		player.accel.x = -0.0001;
-		player.direction = 'left';
-	});
-	Input.addInput('right', 68, function() {
-		player.accel.x = 0.0001;
-		player.direction = 'right';
-	});
-	Input.addInput('up', 87, function() {
-		player.accel.y = -0.0001;
-	});
-	Input.addInput('down', 83, function() {
-		player.accel.y = 0.0001;
-	});
-	Input.addInput('switchGameStates', 74, function() {
-		(count % 2 === 0) ? Renderer.useState(game) : Renderer.useState(state);
 
-		count++;
-	})
+
+	Input.addInput('left', 65, function() {
+		player.vel.x = -0.2;
+		if (!player.dirLock) { player.direction = 'left'; }
+	}, function() { player.vel.x = 0; } );
+
+
+	Input.addInput('right', 68, function() {
+		player.vel.x = 0.2;
+		if (!player.dirLock) { player.direction = 'right'; }
+	}, function() { player.vel.x = 0; } );
+
+
+	Input.addInput('up', 87, function() {
+		player.vel.y = -0.2;
+	}, function() { player.vel.y = 0; } );
+
+
+	Input.addInput('down', 83, function() {
+		player.vel.y = 0.2;
+	}, function() { player.vel.y = 0; } );
+
+	Input.addInput('attack', 32, function() {
+		if (player.direction === 'left') {
+			player.direction = 'attack-left';
+		}
+		else if (player.direction === 'right') {
+			player.direction = 'attack-right';
+		}
+
+		player.dirLock = true;
+	});
 
 	//set up initial game state
-	state.addPlayerToState(player);
-	state.setBackground("./src/resources/grass-background.png");
-	state.setForeground("./src/resources/grass-foreground.png");
+	title.addPlayerToState(player);
+	title.setBackground("./src/resources/grass-background.png");
+	title.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, canvas.width, canvas.height, state);
+	Renderer.init(ctx, canvas.width, canvas.height, title);
 }
 
 function update() {
-	ctx.clearRect(0,0,1000,500);
 
 	now = +new Date;
 	dt = now - prev;
@@ -113,7 +140,7 @@ function update() {
 	requestAnimationFrame(update);
 }
 
-//initialize game!
+//initialize game
 init();
 
 //start main game!

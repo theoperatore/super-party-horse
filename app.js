@@ -185,7 +185,7 @@ This function always assumes that the current underlying gamestate is the
 most recent, so the player will always be passed from the current gamestate
 to the new gamestate
 
-DUNNO IF THIS IS ACDTUALLY WORTH DOING...
+DUNNO IF THIS IS ACTUALLY WORTH DOING...
 
 ******************************************************************************/
 exports.useState = function(newState) {
@@ -448,6 +448,9 @@ var Animation = function Animation() {
 	this.totalTime = 0;
 	this.currTime = 0;
 	this.currIndex = 0;
+	this.completed = false;
+	this.loop = true;
+	this.completedCallback;
 }
 
 /******************************************************************************
@@ -456,12 +459,21 @@ Add a frame to this animation. This function accepts only strings paths to
 images.
 
 ******************************************************************************/
-Animation.prototype.addFrame = function(path, ms, callback) {
-	var frame = new _Frame(path, ms, callback);
+Animation.prototype.addFrame = function(path, ms, loadCallback) {
+	var frame = new _Frame(path, ms, loadCallback);
 
 	this._frames.push(frame);
 	this.numFrames++;
 	this.totalTime += ms;
+};
+
+/******************************************************************************
+
+Add a callback function to be called when this animation is completed.
+
+******************************************************************************/
+Animation.prototype.addAnimationCompletedCallback = function(callback) {
+	this.completedCallback = (typeof callback === 'function') ? callback : function() { console.log ('callback not a function'); };
 };
 
 /******************************************************************************
@@ -484,6 +496,19 @@ Animation.prototype.update = function(dt) {
 			//and increase index to the next frame
 			this.currIndex++;
 		}
+
+		//check for a completed animation
+		if (this.currIndex >= this.numFrames) {
+			if (this.loop) {
+				this.currIndex = 0;
+			}
+			else {
+				this.completed = true;
+				this.currIndex = this.numFrames - 1;
+				this.reset();
+				this.completedCallback();
+			}
+		}
 	}
 };
 
@@ -495,15 +520,17 @@ resetting the animation index if the animation is over; looping the animation
 ******************************************************************************/
 Animation.prototype.getCurrImg = function() {
 	this.currIndex = (this.currIndex >= this.numFrames) ? 0 : this.currIndex;
+
+
 	return this._frames[this.currIndex].img || null;
 };
 
 /******************************************************************************
 
-Synonymous with 'RESET', this function starts/restarts the current animation
+This function starts/restarts the current animation
 
 ******************************************************************************/
-Animation.prototype.start = function() {
+Animation.prototype.reset = function() {
 	this.currTime = 0;
 	this.currIndex = 0;
 };
@@ -542,6 +569,7 @@ var Entity = function Entity() {
 	this.upgrades = {};
 	this.type = "entity";
 	this.direction = 'left';
+	this.dirLock = false;
 	this.animations = {
 		'left'  : new Animation()
 	};
@@ -557,12 +585,42 @@ Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
-Entity.prototype.addFrame = function(animation, path, ms, callback) {
+Entity.prototype.addFrame = function(animation, path, ms, loadCallback) {
 	var anim = this.animations[animation] || new Animation();
-	anim.addFrame(path, ms, callback);
+	anim.addFrame(path, ms, loadCallback);
 	this.animations[animation] = anim;
 
 	//console.log(this.animations);
+};
+
+/******************************************************************************
+
+Control if the given animation is to loop or complete once.
+
+******************************************************************************/
+Entity.prototype.setAnimationLoop = function(anim, loop) {
+	if (this.animations[anim]) {
+		this.animations[anim].loop = loop;
+	}
+	else {
+		console.log('not a defined animation', anim);
+	}
+};
+
+/******************************************************************************
+
+Sets up a callback to be called when an animation is completed
+
+******************************************************************************/
+Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
+	if (this.animations[anim]) {
+		if (typeof callback === 'function') {
+			this.animations[anim].addAnimationCompletedCallback(callback);
+		}
+	}
+	else {
+		console.log(anim,'not a defined animation', anim);
+	}
 };
 
 /******************************************************************************
@@ -650,14 +708,6 @@ module.exports = Entity;
 },{"../utilities/vector2D":8,"./animation":5}],7:[function(require,module,exports){
 /******************************************************************************
 
-This file brings together all of the different engines to make a game run.
-This is the game core; holds the main game loop
-
-******************************************************************************/
-
-
-/******************************************************************************
-
 	Core Vars
 
 ******************************************************************************/
@@ -689,67 +739,104 @@ Renderer = require("./core/renderer"),
 
 ******************************************************************************/
 player = new Entity(),
-state = new GameState('title'),
+title = new GameState('title'),
 game = new GameState('game');
-
 
 function init() {
 	//setup player
 	player.pos.y = 100;
+	player.pos.x = 100;
 
 	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
 		console.log(ev);
 	});
-
-	player.addFrame('right', "./src/resources/donkey-fly-right.png", 500, function(ev) {
-		console.log(ev);
-	});
-
 	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
 		console.log(ev);
 	});
 
-	player.addFrame('left', "./src/resources/donkey-fly-left.png", 500, function(ev) {
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-start-right.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-middle-right.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400, function(ev) {
 		console.log(ev);
 	});
 
-	player.direction = "right";
-
-
-	var count = 0;
-	//setup inputs
-	Input.init();
-	Input.addInput('left', 65, function() {
-		player.accel.x = -0.0001;
-		player.direction = 'left';
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-start-left.png", 250, function(ev) {
+		console.log(ev);
 	});
-	Input.addInput('right', 68, function() {
-		player.accel.x = 0.0001;
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-middle-left.png", 250, function(ev) {
+		console.log(ev);
+	});
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400, function(ev) {
+		console.log(ev);
+	});
+
+	player.addAnimationCompletedCallback('attack-right', function() {
+		console.log('attack-right completed');
+		player.dirLock = false;
 		player.direction = 'right';
 	});
-	Input.addInput('up', 87, function() {
-		player.accel.y = -0.0001;
-	});
-	Input.addInput('down', 83, function() {
-		player.accel.y = 0.0001;
-	});
-	Input.addInput('switchGameStates', 74, function() {
-		(count % 2 === 0) ? Renderer.useState(game) : Renderer.useState(state);
 
-		count++;
-	})
+	player.addAnimationCompletedCallback('attack-left', function() {
+		console.log('attack-left completed');
+		player.dirLock = false;
+		player.direction = 'left';
+	});
+
+	player.setAnimationLoop('attack-left', false);
+	player.setAnimationLoop('attack-right', false);
+
+	player.direction = "right";
+
+	//init with initial game state inputs?
+	Input.init();
+
+
+	Input.addInput('left', 65, function() {
+		player.vel.x = -0.2;
+		if (!player.dirLock) { player.direction = 'left'; }
+	}, function() { player.vel.x = 0; } );
+
+
+	Input.addInput('right', 68, function() {
+		player.vel.x = 0.2;
+		if (!player.dirLock) { player.direction = 'right'; }
+	}, function() { player.vel.x = 0; } );
+
+
+	Input.addInput('up', 87, function() {
+		player.vel.y = -0.2;
+	}, function() { player.vel.y = 0; } );
+
+
+	Input.addInput('down', 83, function() {
+		player.vel.y = 0.2;
+	}, function() { player.vel.y = 0; } );
+
+	Input.addInput('attack', 32, function() {
+		if (player.direction === 'left') {
+			player.direction = 'attack-left';
+		}
+		else if (player.direction === 'right') {
+			player.direction = 'attack-right';
+		}
+
+		player.dirLock = true;
+	});
 
 	//set up initial game state
-	state.addPlayerToState(player);
-	state.setBackground("./src/resources/grass-background.png");
-	state.setForeground("./src/resources/grass-foreground.png");
+	title.addPlayerToState(player);
+	title.setBackground("./src/resources/grass-background.png");
+	title.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, canvas.width, canvas.height, state);
+	Renderer.init(ctx, canvas.width, canvas.height, title);
 }
 
 function update() {
-	ctx.clearRect(0,0,1000,500);
 
 	now = +new Date;
 	dt = now - prev;
@@ -761,7 +848,7 @@ function update() {
 	requestAnimationFrame(update);
 }
 
-//initialize game!
+//initialize game
 init();
 
 //start main game!

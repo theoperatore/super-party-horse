@@ -27,6 +27,7 @@ var Entity = function Entity() {
 	this.upgrades = {};
 	this.type = "entity";
 	this.direction = 'left';
+	this.dirLock = false;
 	this.animations = {
 		'left'  : new Animation()
 	};
@@ -42,12 +43,42 @@ Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
-Entity.prototype.addFrame = function(animation, path, ms, callback) {
+Entity.prototype.addFrame = function(animation, path, ms, loadCallback) {
 	var anim = this.animations[animation] || new Animation();
-	anim.addFrame(path, ms, callback);
+	anim.addFrame(path, ms, loadCallback);
 	this.animations[animation] = anim;
 
 	//console.log(this.animations);
+};
+
+/******************************************************************************
+
+Control if the given animation is to loop or complete once.
+
+******************************************************************************/
+Entity.prototype.setAnimationLoop = function(anim, loop) {
+	if (this.animations[anim]) {
+		this.animations[anim].loop = loop;
+	}
+	else {
+		console.log('not a defined animation', anim);
+	}
+};
+
+/******************************************************************************
+
+Sets up a callback to be called when an animation is completed
+
+******************************************************************************/
+Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
+	if (this.animations[anim]) {
+		if (typeof callback === 'function') {
+			this.animations[anim].addAnimationCompletedCallback(callback);
+		}
+	}
+	else {
+		console.log(anim,'not a defined animation', anim);
+	}
 };
 
 /******************************************************************************
