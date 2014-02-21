@@ -6,7 +6,7 @@ permalink: /origins/
 ---
 
 Origins
-=======
+-------
 
 This blog exists for the sole purpose to explaining my thought processes when coding the game engine used specifically for this game. Hopefully it'll help some wanderer figure out a game design related problem of their own. The concepts in this engine (or game) aren't very complex so it is my hope that everything is concise. 
 
@@ -39,7 +39,7 @@ Here is where the game starts to form. As time goes on, you can 'upgrade' your D
 *PROTECT THE COWS AND DEFEAT THE JAGWARS!*
 
 Source and Posts
-================
+----------------
 
 All of the source will be hosted as a repo on github eventually and the demo section of the site will have the most current demo of the game. 
 

@@ -15,9 +15,7 @@ html, body { height: 100%; }
 body {
   background-color: #333;
   font-family: sans-serif;
-  padding-left: 3em;
-  padding-right: 3em;
-  font-size: small;
+  /*font-size: small;*/
   text-align: center;
 }
 
@@ -27,6 +25,12 @@ h1 {
   font-weight: bold;
   color:#AAAAAA;
 }
+
+h2 {
+  color: #AAAAAA;
+  border-bottom: 2px solid #555;
+}
+
 p { margin: 1em 0; }
 ul, p { color: #e0e0e0; }
 
@@ -66,10 +70,14 @@ a:visited { color: #a0a; }
   width: 40em;
   margin: 3em auto 2em;
   line-height: 1.5em;
+  padding-left: 1em;
+  padding-right:1em;
 }
 
 .header {
   text-align: center;
+  border-bottom: 3px solid #555;
+  margin-bottom: 1em;
 }
 
 .header a {
