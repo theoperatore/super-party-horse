@@ -1,0 +1,5 @@
+name: Super PARTY Horse
+markdown: redcarpet
+markdown_ext: markdown,mkd,mkdn,md,mdown
+pygments: true
+baseurl: /super-party-horse
