@@ -5,12 +5,10 @@ title: "Origins of Super Party Horse"
 permalink: /origins/
 ---
 
-Welcome to the home of 'Super Party Horse'; a game inspired by real-life problems and solutions.
-
 This blog exists for the sole purpose to explaining my thought processes when coding the game engine used specifically for this game. Hopefully it'll help some wanderer figure out a game design related problem of their own. The concepts in this engine (or game) aren't very complex so it is my hope that everything is concise. 
 
-Background
-----------
+Origins
+=======
 
 As stated above, inspiration for the game came from a real-life problem. My sister recently took a trip to the country of Belize to help and learn conservation efforts of the wildlife. While there she heard about the jaguar problems that some livestock farmers encounter. 
 
@@ -34,14 +32,14 @@ Party Horse was such a great concept that we drew a picture that got out of cont
 
 He was truely a sight to behold.
 
-Legends tell of Party Horse having different super powers as well like the ability to speak and understand any language, and fly. 
+Legends tell of Party Horse having different super powers as well: the ability to speak and understand any language and fly. 
 
-Here's where the game starts to form. As time goes on, you can 'upgrade' your Donkey with various abilities and upgrades as he slowly becomes the Party Horse of legend.
+Here is where the game starts to form. As time goes on, you can 'upgrade' your Donkey with various abilities and upgrades as he slowly becomes the Party Horse of legend.
 
-**PROTECT THE COWS AND DEFEAT THE JAGWARS!**
+*PROTECT THE COWS AND DEFEAT THE JAGWARS!*
 
 Source and Posts
-----------------
+================
 
 All of the source will be hosted as a repo on github eventually and the demo section of the site will have the most current demo of the game. 
 
