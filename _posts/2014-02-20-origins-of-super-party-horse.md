@@ -5,12 +5,12 @@ title: "Origins of Super Party Horse"
 permalink: /origins/
 ---
 
-This blog exists for the sole purpose to explaining my thought processes when coding the game engine used specifically for this game. Hopefully it'll help some wanderer figure out a game design related problem of their own. The concepts in this engine (or game) aren't very complex so it is my hope that everything is concise. 
-
 Origins
 =======
 
-As stated above, inspiration for the game came from a real-life problem. My sister recently took a trip to the country of Belize to help and learn conservation efforts of the wildlife. While there she heard about the jaguar problems that some livestock farmers encounter. 
+This blog exists for the sole purpose to explaining my thought processes when coding the game engine used specifically for this game. Hopefully it'll help some wanderer figure out a game design related problem of their own. The concepts in this engine (or game) aren't very complex so it is my hope that everything is concise. 
+
+The inspiration for this game came from a real-life problem. My sister recently took a trip to the country of Belize to help and learn conservation efforts of the wildlife. While there she heard about the jaguar problems that some livestock farmers encounter. 
 
 Think about it. If you're a jaguar and hungry, how could you pass up easy prey? I mean, come on, the cows are just sitting there in their pasture...looking....so.....*tasty*...and *free*...
 
