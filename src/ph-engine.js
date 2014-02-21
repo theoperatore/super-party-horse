@@ -68,6 +68,8 @@ function init() {
 
 	var count = 0;
 	//setup inputs
+
+	//init with initial game state inputs?
 	Input.init();
 	Input.addInput('left', 65, function() {
 		player.accel.x = -0.0001;
