@@ -13,7 +13,7 @@
 html, body { height: 100%; }
 
 body {
-  background-color: #ebebeb;
+  background-color: #fff;
   font-family: sans-serif;
   font-size: small;
   text-align: center;
@@ -165,6 +165,13 @@ ul {
   padding: 0 .4em;
 }
 
+/*
+.post {
+  box-shadow: 1px 3px 15px 1px #333;
+  border-radius: 2pt;
+  padding: 1em;
+}
+*/
 .post ul, .post ol {
   margin-left: 1.35em;
 }
