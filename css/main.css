@@ -58,6 +58,19 @@ a:visited { color: #a0a; }
   font-size: 80%;
 }
 
+.right_col {
+  float:right;
+  width: 20em;
+}
+
+.left_col {
+  float:left;
+}
+
+.clearer {
+  clear:both;
+}
+
 /*****************************************************************************/
 /*
 /* Site
