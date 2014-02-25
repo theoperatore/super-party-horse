@@ -2,6 +2,7 @@
 
 layout: post
 title: "Sprites and Animation"
+comments: true
 
 ---
 
