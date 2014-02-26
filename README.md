@@ -18,8 +18,12 @@ Goals
 
 
 *All version history refers to the ph-engine used to create Super Party Horse*
+Current: Version 0.2.3
+----------------------
+- Improvement on Input handling
+- Finished first implementation on game states
 
-Current: Version 0.2
+Version 0.2
 --------------------
 
 - Background and Foreground implemented
