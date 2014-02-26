@@ -3,6 +3,15 @@
 /* Common
 /*
 /*****************************************************************************/
+@font-face {
+  font-family: 'Bazar';
+  src: url('./Bazar.ttf'); /* IE9 Compat Modes */
+  src: url('Bazar.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('Bazar.woff') format('woff'), /* Modern Browsers */
+       url('Bazar.ttf')  format('truetype'), /* Safari, Android, iOS */
+       url('Bazar.svg#svgFontName') format('svg'); /* Legacy iOS */
+}
+
 
 /* Global Reset */
 * {
@@ -13,7 +22,8 @@
 html, body { height: 100%; }
 
 body {
-  background-color: #fff;
+  /*background-color: #fff;*/
+  background-color:#F2F2E8;
   font-family: sans-serif;
   font-size: small;
   text-align: center;
@@ -34,9 +44,12 @@ h2 {
 p { margin: 1em 0; }
 /*ul, p { color: #e0e0e0; }*/
 
-a         { color: #00a; }
-a:hover   { color: #000; }
-a:visited { color: #a0a; }
+a         { 
+  color: #F07057; 
+  text-decoration: none;
+}
+a:hover   { color: #333; }
+a:visited { color: #F07057; }
 
 /*****************************************************************************/
 /*
@@ -50,6 +63,10 @@ a:visited { color: #a0a; }
 
 .posts li {
   line-height: 1.75em;
+}
+
+.posts li a:hover {
+  color: #333;
 }
 
 .posts span {
@@ -95,6 +112,7 @@ a:visited { color: #a0a; }
   text-align: center;
   /*border-bottom: 3px solid #555;*/
   margin-bottom: 1em;
+  height: 250px;
 }
 
 .header a {
@@ -111,10 +129,13 @@ a:visited { color: #a0a; }
   background-repeat: no-repeat;
   /*background-size: contain;*/
   background-position: right -15px;
+  font-family: 'Bazar';
+  margin-bottom: 0.75em;
 }
 
 .title a {
-  color: #a00;
+  /*color: #a00;*/
+  color: #2ABAFF;
 }
 
 .title a:hover {
