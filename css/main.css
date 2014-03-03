@@ -219,7 +219,14 @@ ul {
 
 .post pre, .post pre > .post code {
   /* Make more code fit on small screens */
-  font-size: 14px;
+  font-size: 10px;
+}
+
+@media only screen and (min-width: 481px) {
+  .post pre, .post pre > .post code {
+    /* Bigger font on bigger screens */
+    font-size: 14px;
+  }
 }
 
 /*
