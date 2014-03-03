@@ -75,6 +75,7 @@ a:visited { color: #F07057; }
 .posts {
   list-style-type: none;
   margin-bottom: 2em;
+  margin-left:0;
 }
 
 .posts li {
@@ -98,6 +99,13 @@ a:visited { color: #F07057; }
 
 .left_col {
   float:left;
+}
+
+@media only screen and (max-width: 700px) {
+  .right_col, .left_col { float: none; }
+  .right_col { width: inherit; }
+
+  .posts li { font-size: 12px;}
 }
 
 .clearer {
