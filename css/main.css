@@ -22,6 +22,22 @@
 html, body { height: 100%; }
 
 body {
+  max-width: 700px;
+  padding: 12px;
+  padding-bottom: 0;
+  margin: 0 auto;
+}
+
+@media only screen and (min-width: 481px) {
+  body {
+    padding-top: 24px;
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+
+body {
   /*background-color: #fff;*/
   background-color:#F2F2E8;
   font-family: sans-serif;
@@ -198,6 +214,12 @@ ul {
   border: 1px solid #ddd;
   background-color: #eef;
   padding: 0 .4em;
+  white-space: pre-wrap;
+}
+
+.post pre, .post pre > .post code {
+  /* Make more code fit on small screens */
+  font-size: 14px;
 }
 
 /*
@@ -231,3 +253,5 @@ ul {
 .post pre.terminal code {
   background-color: #333;
 }
+
+
