@@ -29,9 +29,9 @@ body {
   text-align: center;
 }
 
-h1 { 
-  margin-bottom: 1em; 
-  font-size: 2em; 
+h1 {
+  margin-bottom: 1em;
+  font-size: 2em;
   font-weight: bold;
   /*color:#AAAAAA;*/
 }
@@ -44,8 +44,8 @@ h2 {
 p { margin: 1em 0; }
 /*ul, p { color: #e0e0e0; }*/
 
-a         { 
-  color: #F07057; 
+a         {
+  color: #F07057;
   text-decoration: none;
 }
 a:hover   { color: #333; }
@@ -101,7 +101,7 @@ a:visited { color: #F07057; }
 .site {
   font-size: 115%;
   text-align: justify;
-  width: 50em;
+  max-width: 50em;
   margin: 3em auto 2em;
   line-height: 1.5em;
   padding-left: 1em;
@@ -131,6 +131,7 @@ a:visited { color: #F07057; }
   background-position: right -15px;
   font-family: 'Bazar';
   margin-bottom: 0.75em;
+  /* e9bf53  yellow-ish mustard */
 }
 
 .title a {

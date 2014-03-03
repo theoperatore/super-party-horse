@@ -17,7 +17,7 @@ Goals
 - To provide help to those trying to learn coding practices and game mechanics.
 
 
-*All version history refers to the ph-engine used to create Super Party Horse*
+*All version history refers to the Super Party Horse implementation of the ph-engine*
 Current: Version 0.2.3
 ----------------------
 - Improvement on Input handling

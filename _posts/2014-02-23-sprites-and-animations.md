@@ -8,18 +8,18 @@ comments: true
 
 My approach to animations and sprites are fairly simple. An animation is any number of individual *frames* played in a sequence, and a sprite is a collection of *animations* to be used at different times.
 
-The ph-engine uses an *Entity* instead of a *Sprite*. They are both the exact same idea and type of object. I just happen to think Entity is a cooler word than Sprite. 
+The ph-engine uses an *Entity* instead of a *Sprite*. They are both the exact same idea and type of object. I just happen to think Entity is a cooler word than Sprite.
 
 For consistency, I'll refer to Sprites as Entities, but remember that they are the same idea but different terminology.
 
 Frames are just images
 ----------------------
 
-An animation is a sequential collection of *frames*. A frame is just a picture; one single, boring image. 
+An animation is a sequential collection of *frames*. A frame is just a picture; one single, boring image.
 
 ![Start of Donkey basic attack]({{ site.baseurl }}/assets/donkey-attack-start-right.png)
 
-This is one frame of the player's basic attack. By itself it doesn't mean much. 
+This is one frame of the player's basic attack. By itself it doesn't mean much.
 
 Let's say we create another frame similar to this one but just a tiny bit different...
 
@@ -32,7 +32,7 @@ This is the basis of an Animation; switching between frames in order to show mot
 Code Time
 ---------
 
-How do we represent one frame in JavaScript? 
+How do we represent one frame in JavaScript?
 
 First we have to learn how to create an image element from scratch. If you want the technical approach, I'm partial to the [Mozilla Developer's Network](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Canvas_tutorial/Using_images). Otherwise stay here and I'll tell you what you need to know.
 
@@ -69,7 +69,7 @@ Let's setup a nice constructor to handle these properties:
 {% highlight javascript linenos %}
 //object constructor that represents one Frame in an Animation
 var _Frame = function(path, ms, callback) {
-	
+
     //the img of the frame
     this.img = new Image();
 
@@ -107,7 +107,7 @@ Our constructor looks likes this:
 
 {% highlight javascript linenos %}
 var Animation = function() {
-    
+
     //collection of frames
     this._frames = [];
 
@@ -131,9 +131,9 @@ var Animation = function() {
 A fairly straightforward constructor. Nothing out of the ordinary here. We have our variables all set to handle our animation so lets define some functions that'll get us going.
 
 {% highlight javascript linenos %}
-//add frame function 
+//add frame function
 Animation.prototype.addFrame = function(path, ms, callback) {
-    
+
     //make a new frame as defined in our _Frame constructor above
     var frame = new _Frame(path, ms, callback);
 
@@ -151,7 +151,7 @@ This function handles adding a new frame to our animation by first creating a ne
 The next function is where the fun resides...
 
 {% highlight javascript linenos %}
-//update the current animation index 
+//update the current animation index
 Animation.prototype.update = function(dt) {
 
     if (this.numFrames > 1) {
@@ -208,7 +208,7 @@ This time I'm going to use psuedo code to illustrate creating an Entity because 
 {% highlight javascript linenos %}
 //new Entity object constructor
 Entity = {
-    
+
     //set up other properties
     ...
 
@@ -232,7 +232,7 @@ Here we have an `animations` object that will hold the name of our animation and
 {% highlight javascript linenos %}
 //handle adding a frame
 addFrame (anim, path, ms, loadCallback) {
-    
+
     //check to see if anim is already an animation,
     //create a new animation if it is not
     tmpAnim = animations[anim] || new Animation
@@ -283,7 +283,7 @@ player.direction = 'right';
 //in another function...
 ...
 if (input left is pressed) {
-    
+
     player.direction = 'left';
 }
 
@@ -300,4 +300,4 @@ Of course, to achieve finer animations just add more frames. With the implementa
 
 That's all on Entities an Animations for now. In the future I'll add to the idea of an Entity by talking about how to update an Entity's position over time.
 
-Comment Storm!
+**Comment Storm!**

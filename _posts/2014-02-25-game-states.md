@@ -4,7 +4,7 @@ title: "Game States"
 comments: true
 ---
 
-A game state is the condition that the game is running in at any point in time. 
+A game state is the condition that the game is running in at any point in time.
 
 For example, *Super Party Horse* uses the states: `title`, `main`, and `gameover` (among others).
 
@@ -21,11 +21,11 @@ Defining a State
 
 First we need to define what a game state represents (in code).
 
-The importance of a game state is threefold: 
+The importance of a game state is threefold:
 
 1. The engine needs to know what to render (player, enemies, scenery...)
 2. The engine needs to know what objects need physics updates(player, enemies, interactables...)
-3. The engine needs to know what to do when a user presses an input. 
+3. The engine needs to know what to do when a user presses an input.
 
 {% highlight javascript linenos %}
 //State constructor function
@@ -54,7 +54,7 @@ var State = function(name) {
 }
 {% endhighlight %}
 
-Defined in this `State` object are all of the necessary properties that fit the above criteria. 
+Defined in this `State` object are all of the necessary properties that fit the above criteria.
 
 We hold a reference to the player object, `this.player`, and other entities, `this.enemies`, `this.npcs`, `this.interactables`, that the Renderer and main update functions will call to draw and update respectively.
 
@@ -74,7 +74,7 @@ There are two steps involved with switching between states:
 1. Set the new state in the Renderer
 2. Set up the new state's inputs in the InputManager
 
-The engine renderer uses the current state to draw everything; in particular what we have defined above. 
+The engine renderer uses the current state to draw everything; in particular what we have defined above.
 
 Every frame, the renderer will draw the `backdrop`, `background`, `npcs`, `enemies`, `interactables`, `player`, and `foreground`.
 
@@ -109,7 +109,7 @@ Renderer.useState(title);
 //later...
 Renderer.useState(game);
 // => draws everything in 'game' next update
-{% endhighlight %} 
+{% endhighlight %}
 
 Switching of states in the renderer is easy.
 
@@ -120,10 +120,10 @@ Switching input is a little tricker, but can also be implemented with one functi
 {% highlight javascript linenos %}
 //resides in input.js or InputManager
 exports.useState = function(newState) {
-    
+
     //temporary input variable
     var tmpInput;
-    
+
     //check newState
     if (newState exists) {
 
@@ -149,9 +149,9 @@ exports.useState = function(newState) {
 } //end useState function
 {% endhighlight %}
 
-The reason switching inputs is a little trickier is because of how we keep track of the inputs. Game states don't keep track of inputs the same way the InputManager does. 
+The reason switching inputs is a little trickier is because of how we keep track of the inputs. Game states don't keep track of inputs the same way the InputManager does.
 
-The InputManager (input handling post to follow) direcly maps keyCodes as an index into the array holding available inputs. 
+The InputManager (input handling post to follow) direcly maps keyCodes as an index into the array holding available inputs.
 
 A state keeps the inputs to implement in an array as well, but doesn't use the input's keyCode as an index; the inputs are simply *pushed* into the underlying array in sequence.
 
@@ -170,7 +170,7 @@ b.push(2);
 // b.length == 1 (State inputs array)
 {% endhighlight %}
 
-Because the size of the inputs array in the InputManager will be the size of the largest keyCode, looping through that large of a collection will take a long time compared to a smaller array. 
+Because the size of the inputs array in the InputManager will be the size of the largest keyCode, looping through that large of a collection will take a long time compared to a smaller array.
 
 Not to fear though, `state` inputs hold a `keyCode` property that allows for easy indexing into the InputManager inputs array.
 
@@ -183,13 +183,15 @@ var InputManager = require('./path/to/input-manager'),
     game = new State('game');
 
 //add input to 'title'
-title.addSystemInput('start', 13, function() { console.log('You pushed spacebar!'); });
+title.addSystemInput('start', 13, function() {
+  console.log('You pushed spacebar!');
+});
 
 //add inputs to 'game'
 game.addInput('left', 65,
 
 //keydownCallback
-function() { 
+function() {
     //move player left
 },
 
@@ -201,7 +203,7 @@ function() {
 game.addInput('left', 68,
 
 //keydownCallback
-function() { 
+function() {
     //move player right
 },
 
@@ -227,7 +229,7 @@ InputManager.useState(game);
 Conclusion
 ----------
 
-Different *states* of a game only serve to provide a mechanism for scenery and inputs to be grouped together and easily changed. 
+Different *states* of a game only serve to provide a mechanism for scenery and inputs to be grouped together and easily changed.
 
 Using different states make it easy to build a title screen with associated inputs (press 'enter' to play) that, upon detecting the correct input, switches to another state that will render the game and set up player movement inputs.
 
