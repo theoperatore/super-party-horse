@@ -6,7 +6,7 @@ comments: true
 
 ---
 
-My approach to animations and sprites are fairly simple. An animation is any number of individual *frames* played in a sequence, and a sprite is a collection of *animations* to be used at different times.
+My approach to animations and sprites is fairly simple. An animation is any number of individual *frames* played in a sequence, and a sprite is a collection of *animations* to be used at different times.
 
 The ph-engine uses an *Entity* instead of a *Sprite*. They are both the exact same idea and type of object. I just happen to think Entity is a cooler word than Sprite.
 
