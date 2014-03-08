@@ -7,12 +7,12 @@ var _Frame = function _Frame(path, ms, callback) {
 	this.img = new Image();
 	this.frameTime = ms;
 
-	if (typeof callback === "function") {
-		this.img.addEventListener('load', callback( {
-			message : path + " -- loaded",
-			frame   : this
-		}));
-	}
+	callback = (typeof callback === 'function') ? callback : function() {};
+
+	this.img.addEventListener('load', callback( {
+		message : path + " -- loaded",
+		frame   : this
+	}));
 
 	this.img.src = path;
 }
@@ -26,10 +26,8 @@ certain conditions and after a certain period of time.
 var Animation = function Animation() {
 	this._frames = [];
 	this.numFrames = 0;
-	this.totalTime = 0;
 	this.currTime = 0;
 	this.currIndex = 0;
-	this.completed = false;
 	this.loop = true;
 	this.completedCallback;
 }
@@ -45,7 +43,6 @@ Animation.prototype.addFrame = function(path, ms, loadCallback) {
 
 	this._frames.push(frame);
 	this.numFrames++;
-	this.totalTime += ms;
 };
 
 /******************************************************************************
@@ -67,43 +64,38 @@ Animation.prototype.update = function(dt) {
 
 	//only update if there are 2 or more frames in this animation
 	if (this.numFrames > 1) {
-
-		//if the currentTime is greater than the current frame's running time...
+		
+		//update index if we're done with this frame
 		if (this.currTime >= this._frames[this.currIndex].frameTime) {
-
-			//keep the overflow time...
 			this.currTime %= this._frames[this.currIndex].frameTime;
-
-			//and increase index to the next frame
 			this.currIndex++;
 		}
 
-		//check for a completed animation
+		//if the animation is done...
 		if (this.currIndex >= this.numFrames) {
-			if (this.loop) {
-				this.currIndex = 0;
-			}
-			else {
-				this.completed = true;
-				this.currIndex = this.numFrames - 1;
-				this.reset();
+
+			//if we aren't looping...
+			if (!this.loop) {
+
+				//call the callback
 				this.completedCallback();
 			}
+
+			//regardless, reset vars
+			this.reset();
 		}
+
 	}
 };
 
 /******************************************************************************
 
-Returns the current frame's image for drawing. This function also handles
-resetting the animation index if the animation is over; looping the animation
+Returns the current frame's image for drawing. The update functon ensures that
+only a valid frame is returned; this.currIndex never results in 'undefined'
 
 ******************************************************************************/
 Animation.prototype.getCurrImg = function() {
-	this.currIndex = (this.currIndex >= this.numFrames) ? 0 : this.currIndex;
-
-
-	return this._frames[this.currIndex].img || null;
+	return this._frames[this.currIndex].img;
 };
 
 /******************************************************************************

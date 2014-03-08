@@ -8,6 +8,8 @@ var Input = function Input(name, keyCode, callback, keyup) {
 	this.keyCode = keyCode;
 	this.keydownCallback = callback || function() {};
 	this.keyupCallback = keyup || function() {};
+	this.isPressed = false;
+	this.isSystemInput = false;
 }
 
 
@@ -18,12 +20,13 @@ keyboard event being processed, resulting data is the Input object holding the
 function to call for either keydown or keyup 
 
 ******************************************************************************/
-var inputs = [];
+var inputs = [],
+	inputMap = {};
 
 
 /******************************************************************************
 
-Initialized the DOM with keydown and keyup events and proccesses them
+Initialized the DOM with keydown and keyup events and processes them
 accordingly.
 
 ******************************************************************************/
@@ -36,7 +39,11 @@ exports.init = function() {
 
 		var tmpInput = inputs[ev.keyCode] || 'undefined';
 
-		(tmpInput !== 'undefined') ? tmpInput.keydownCallback() : console.log('undefined keydown');
+		tmpInput.isPressed = true;
+
+		if (tmpInput !== 'undefined' && tmpInput.isSystemInput) {
+			tmpInput.keydownCallback();
+		} 
 
 	});
 
@@ -45,6 +52,8 @@ exports.init = function() {
 		ev.stopPropagation();
 
 		var tmpInput = inputs[ev.keyCode] || 'undefined';
+
+		tmpInput.isPressed = false;
 
 		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup');
 	});
@@ -65,13 +74,71 @@ keydownCallback -- function to be called when this key is depressed
 keyupCallback   -- function to be called when this key is released
 
 ******************************************************************************/
-exports.addInput = function(name, keyCode, keydownCallback, keyupCallback) {
+exports.addInput = function(name, keyCode, keydownCallback, keyupCallback, systemInput) {
 	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
 	keyupCallback = (typeof keyupCallback === 'function') ? keyupCallback : function() {};
 
 	var newInput = new Input(name, keyCode, keydownCallback, keyupCallback);
 
 	inputs[keyCode] = newInput;
+	inputMap[name] = keyCode;
+}
+
+/******************************************************************************
+
+Add a system input
+
+******************************************************************************/
+exports.addSystemInput = function(name, keyCode, keydownCallback) {
+	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
+
+	var newInput = new Input(name, keyCode, keydownCallback);
+
+	newInput.isSystemInput = true;
+
+	inputs[keyCode] = newInput;
+	inputMap[name] = keyCode;
+}
+
+/******************************************************************************
+
+Removes the given input from the input collection.
+
+******************************************************************************/
+exports.removeInput = function(name) {
+	if (inputMap[name]) {
+		var out = inputs[inputMap[name]] = undefined;
+		inputMap[name] = undefined;
+
+		//console.log(out);
+		//console.log(inputs);
+	}
+}
+
+/******************************************************************************
+
+Returns the underlying array holding all of the inputs and associated callbacks
+
+******************************************************************************/
+exports.getInputCollection = function() {
+	return inputs;
+}
+
+/******************************************************************************
+
+Updates the inputs and inputMap array with the input functions in the new state
+
+WARNING: this function overrides previous input functions
+
+******************************************************************************/
+exports.useState = function(newState) {
+
+	for (var i = 0; i < newState.inputs.length; i++) {
+		var tmpInput = newState.inputs[i];
+
+		inputs[tmpInput.keyCode] = tmpInput;
+		inputMap[tmpInput.name] = tmpInput.keyCode;
+	}
 }
 
 /******************************************************************************

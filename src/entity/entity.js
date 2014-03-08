@@ -25,7 +25,6 @@ var Entity = function Entity() {
 	this.inventory = {};
 	this.equipment = {};
 	this.upgrades = {};
-	this.type = "entity";
 	this.direction = 'left';
 	this.dirLock = false;
 	this.animations = {
@@ -139,7 +138,9 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	this.vel.y += this.accel.y * dt;
 
 	//update animations
-	this.animations[this.direction].update(dt);
+	if (this.animations[this.direction] != 'undefined') {
+		this.animations[this.direction].update(dt)
+	}
 };
 
 /******************************************************************************

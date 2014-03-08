@@ -19,7 +19,7 @@ exports.init = function(context, width, height, state) {
 	rend.ctx = context;
 	rend.width = width;
 	rend.height = height;
-	rend.state = state || new State('title');
+	rend.state = state || new State('dummy');
 }
 
 /******************************************************************************
@@ -36,16 +36,14 @@ DUNNO IF THIS IS ACTUALLY WORTH DOING...
 ******************************************************************************/
 exports.useState = function(newState) {
 	if (typeof newState != 'undefined') {
-		var tmpPlayer = rend.state.player;
-
 		rend.state = newState;
-		rend.state.player = tmpPlayer;
+		rend.state.player = newState.player;
 	}
 }
 
 /******************************************************************************
 
-Draw all setup objects to the screen
+Draw all set up objects to the screen
 
 ******************************************************************************/
 exports.draw = function(gameState) {
@@ -100,6 +98,18 @@ exports.draw = function(gameState) {
 			//draw hud
 			if (renderState.hud != null) {
 
+			}
+
+			//draw basic text to the screen
+			if (renderState.plainText != null) {
+				rend.ctx.beginPath();
+				rend.ctx.font = "25pt sans-serif";
+				rend.ctx.fillText(renderState.plainText, 0 ,rend.height / 2);
+			}
+
+			//draw any optional rendering specified by the designer
+			if (renderState.optionalRenderingFucntion != null) {
+				renderState.ooptionalRenderingFunction();
 			}
 		}
 		else {

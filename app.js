@@ -74,6 +74,8 @@ var Input = function Input(name, keyCode, callback, keyup) {
 	this.keyCode = keyCode;
 	this.keydownCallback = callback || function() {};
 	this.keyupCallback = keyup || function() {};
+	this.isPressed = false;
+	this.isSystemInput = false;
 }
 
 
@@ -84,12 +86,13 @@ keyboard event being processed, resulting data is the Input object holding the
 function to call for either keydown or keyup 
 
 ******************************************************************************/
-var inputs = [];
+var inputs = [],
+	inputMap = {};
 
 
 /******************************************************************************
 
-Initialized the DOM with keydown and keyup events and proccesses them
+Initialized the DOM with keydown and keyup events and processes them
 accordingly.
 
 ******************************************************************************/
@@ -102,7 +105,11 @@ exports.init = function() {
 
 		var tmpInput = inputs[ev.keyCode] || 'undefined';
 
-		(tmpInput !== 'undefined') ? tmpInput.keydownCallback() : console.log('undefined keydown');
+		tmpInput.isPressed = true;
+
+		if (tmpInput !== 'undefined' && tmpInput.isSystemInput) {
+			tmpInput.keydownCallback();
+		} 
 
 	});
 
@@ -111,6 +118,8 @@ exports.init = function() {
 		ev.stopPropagation();
 
 		var tmpInput = inputs[ev.keyCode] || 'undefined';
+
+		tmpInput.isPressed = false;
 
 		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup');
 	});
@@ -131,13 +140,71 @@ keydownCallback -- function to be called when this key is depressed
 keyupCallback   -- function to be called when this key is released
 
 ******************************************************************************/
-exports.addInput = function(name, keyCode, keydownCallback, keyupCallback) {
+exports.addInput = function(name, keyCode, keydownCallback, keyupCallback, systemInput) {
 	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
 	keyupCallback = (typeof keyupCallback === 'function') ? keyupCallback : function() {};
 
 	var newInput = new Input(name, keyCode, keydownCallback, keyupCallback);
 
 	inputs[keyCode] = newInput;
+	inputMap[name] = keyCode;
+}
+
+/******************************************************************************
+
+Add a system input
+
+******************************************************************************/
+exports.addSystemInput = function(name, keyCode, keydownCallback) {
+	keydownCallback = (typeof keydownCallback === 'function') ? keydownCallback : function() {};
+
+	var newInput = new Input(name, keyCode, keydownCallback);
+
+	newInput.isSystemInput = true;
+
+	inputs[keyCode] = newInput;
+	inputMap[name] = keyCode;
+}
+
+/******************************************************************************
+
+Removes the given input from the input collection.
+
+******************************************************************************/
+exports.removeInput = function(name) {
+	if (inputMap[name]) {
+		var out = inputs[inputMap[name]] = undefined;
+		inputMap[name] = undefined;
+
+		//console.log(out);
+		//console.log(inputs);
+	}
+}
+
+/******************************************************************************
+
+Returns the underlying array holding all of the inputs and associated callbacks
+
+******************************************************************************/
+exports.getInputCollection = function() {
+	return inputs;
+}
+
+/******************************************************************************
+
+Updates the inputs and inputMap array with the input functions in the new state
+
+WARNING: this function overrides previous input functions
+
+******************************************************************************/
+exports.useState = function(newState) {
+
+	for (var i = 0; i < newState.inputs.length; i++) {
+		var tmpInput = newState.inputs[i];
+
+		inputs[tmpInput.keyCode] = tmpInput;
+		inputMap[tmpInput.name] = tmpInput.keyCode;
+	}
 }
 
 /******************************************************************************
@@ -173,7 +240,7 @@ exports.init = function(context, width, height, state) {
 	rend.ctx = context;
 	rend.width = width;
 	rend.height = height;
-	rend.state = state || new State('title');
+	rend.state = state || new State('dummy');
 }
 
 /******************************************************************************
@@ -190,16 +257,14 @@ DUNNO IF THIS IS ACTUALLY WORTH DOING...
 ******************************************************************************/
 exports.useState = function(newState) {
 	if (typeof newState != 'undefined') {
-		var tmpPlayer = rend.state.player;
-
 		rend.state = newState;
-		rend.state.player = tmpPlayer;
+		rend.state.player = newState.player;
 	}
 }
 
 /******************************************************************************
 
-Draw all setup objects to the screen
+Draw all set up objects to the screen
 
 ******************************************************************************/
 exports.draw = function(gameState) {
@@ -255,6 +320,18 @@ exports.draw = function(gameState) {
 			if (renderState.hud != null) {
 
 			}
+
+			//draw basic text to the screen
+			if (renderState.plainText != null) {
+				rend.ctx.beginPath();
+				rend.ctx.font = "25pt sans-serif";
+				rend.ctx.fillText(renderState.plainText, 0 ,rend.height / 2);
+			}
+
+			//draw any optional rendering specified by the designer
+			if (renderState.optionalRenderingFucntion != null) {
+				renderState.ooptionalRenderingFunction();
+			}
 		}
 		else {
 			console.log('Game state is not set!');
@@ -288,6 +365,8 @@ var State = function State(name) {
 	};
 	this.inputs = [];
 	this.hud = null;
+	this.plainText = null;
+	this.optionalRenderingFunction = null;
 };
 
 /******************************************************************************
@@ -305,14 +384,13 @@ Setup enemies to the state; can pass in either a single enemy, or an array
 
 ******************************************************************************/
 State.prototype.addEnemyToState = function(enemy) {
-	if (typeof enemy === 'entity') {
-		this.enemies.push(enemy);
-	}
-
-	else if (enemy.length) {
+	if (enemy.length) {
 		for (var i = 0; i < enemy.length; i++) {
 			this.enemies.push(enemy[i]);
 		}
+	}
+	else {
+		this.enemies.push(enemy);
 	}
 }
 
@@ -322,14 +400,13 @@ Add NPCs to this State; can add single npcs or an array
 
 ******************************************************************************/
 State.prototype.addNPCToState = function(npc) {
-	if (typeof npc === 'entity') {
-		this.npcs.push(npc);
-	}
-
-	else if (npc.length) {
+	if (npc.length) {
 		for (var i = 0; i < npc.length; i++) {
 			this.npcs.push(npc[i]);
 		}
+	}
+	else {
+		this.npcs.push(npc);
 	}
 }
 
@@ -339,14 +416,13 @@ Add interactables to this State; single or an array
 
 ******************************************************************************/
 State.prototype.addInteractableToState = function(interactable) {
-	if (typeof interactable === 'entity') {
-		this.interactables.push(interactable);
-	}
-
-	else if (interactable.length) {
+	if (interactable.length) {
 		for (var i = 0; i < interactable.length; i++) {
 			this.interactables.push(interactable[i]);
-		}
+		}	
+	}
+	else {
+		this.interactables.push(interactable);
 	}
 }
 
@@ -359,6 +435,19 @@ State.prototype.addInput = function(name, keyCode, keydownCallback, keyupCallbac
 	//inputManager.addInput(name, keyCode, keydownCallback, keyupCallback);
 
 	this.inputs.push(inputManager.createInput(name, keyCode, keydownCallback, keyupCallback));
+};
+
+/******************************************************************************
+
+Adds a system input to this state, but not to the input manager
+
+******************************************************************************/
+State.prototype.addSystemInput = function(name, keyCode, keydownCallback) {
+	var input = inputManager.createInput(name, keyCode, keydownCallback);
+
+	input.isSystemInput = true;
+
+	this.inputs.push(input);
 };
 
 /******************************************************************************
@@ -412,6 +501,16 @@ State.prototype.setForeground = function(path, callback) {
 	});
 };
 
+/******************************************************************************
+
+Set any optional rendering function. set to 'null' if anything but a function
+is passed as a parameter.
+
+******************************************************************************/
+State.prototype.addOptionalRendering = function(callback) {
+	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
+};
+
 //export the State constructor
 module.exports = State;
 
@@ -426,12 +525,12 @@ var _Frame = function _Frame(path, ms, callback) {
 	this.img = new Image();
 	this.frameTime = ms;
 
-	if (typeof callback === "function") {
-		this.img.addEventListener('load', callback( {
-			message : path + " -- loaded",
-			frame   : this
-		}));
-	}
+	callback = (typeof callback === 'function') ? callback : function() {};
+
+	this.img.addEventListener('load', callback( {
+		message : path + " -- loaded",
+		frame   : this
+	}));
 
 	this.img.src = path;
 }
@@ -445,10 +544,8 @@ certain conditions and after a certain period of time.
 var Animation = function Animation() {
 	this._frames = [];
 	this.numFrames = 0;
-	this.totalTime = 0;
 	this.currTime = 0;
 	this.currIndex = 0;
-	this.completed = false;
 	this.loop = true;
 	this.completedCallback;
 }
@@ -464,7 +561,6 @@ Animation.prototype.addFrame = function(path, ms, loadCallback) {
 
 	this._frames.push(frame);
 	this.numFrames++;
-	this.totalTime += ms;
 };
 
 /******************************************************************************
@@ -486,43 +582,38 @@ Animation.prototype.update = function(dt) {
 
 	//only update if there are 2 or more frames in this animation
 	if (this.numFrames > 1) {
-
-		//if the currentTime is greater than the current frame's running time...
+		
+		//update index if we're done with this frame
 		if (this.currTime >= this._frames[this.currIndex].frameTime) {
-
-			//keep the overflow time...
 			this.currTime %= this._frames[this.currIndex].frameTime;
-
-			//and increase index to the next frame
 			this.currIndex++;
 		}
 
-		//check for a completed animation
+		//if the animation is done...
 		if (this.currIndex >= this.numFrames) {
-			if (this.loop) {
-				this.currIndex = 0;
-			}
-			else {
-				this.completed = true;
-				this.currIndex = this.numFrames - 1;
-				this.reset();
+
+			//if we aren't looping...
+			if (!this.loop) {
+
+				//call the callback
 				this.completedCallback();
 			}
+
+			//regardless, reset vars
+			this.reset();
 		}
+
 	}
 };
 
 /******************************************************************************
 
-Returns the current frame's image for drawing. This function also handles
-resetting the animation index if the animation is over; looping the animation
+Returns the current frame's image for drawing. The update functon ensures that
+only a valid frame is returned; this.currIndex never results in 'undefined'
 
 ******************************************************************************/
 Animation.prototype.getCurrImg = function() {
-	this.currIndex = (this.currIndex >= this.numFrames) ? 0 : this.currIndex;
-
-
-	return this._frames[this.currIndex].img || null;
+	return this._frames[this.currIndex].img;
 };
 
 /******************************************************************************
@@ -567,7 +658,6 @@ var Entity = function Entity() {
 	this.inventory = {};
 	this.equipment = {};
 	this.upgrades = {};
-	this.type = "entity";
 	this.direction = 'left';
 	this.dirLock = false;
 	this.animations = {
@@ -681,7 +771,9 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	this.vel.y += this.accel.y * dt;
 
 	//update animations
-	this.animations[this.direction].update(dt);
+	if (this.animations[this.direction] != 'undefined') {
+		this.animations[this.direction].update(dt)
+	}
 };
 
 /******************************************************************************
@@ -705,7 +797,44 @@ Entity.prototype.draw = function(ctx) {
 
 //export the Entity constructor
 module.exports = Entity;
-},{"../utilities/vector2D":8,"./animation":5}],7:[function(require,module,exports){
+},{"../utilities/vector2D":10,"./animation":5}],7:[function(require,module,exports){
+var Entity = require('./entity');
+
+var Player = function Player() {
+	
+	//Player inherits from Entity
+	Entity.call(this);
+}
+
+//inheritance
+Player.prototype = Object.create(Entity.prototype);
+
+
+/******************************************************************************
+
+Check for input for the player
+
+******************************************************************************/
+Player.prototype.pollInput = function(inputMap, inputCollection) {
+	var playerInput;
+
+	for (var name in inputMap) {
+
+		playerInput = inputCollection[inputMap[name]] || null;
+
+		if (playerInput != null && playerInput.isPressed) {
+
+			//console.log(name, inputCollection[inputMap[name]].isPressed);
+
+			inputCollection[inputMap[name]].keydownCallback();
+		}
+	}
+};
+
+module.exports = Player;
+
+
+},{"./entity":6}],8:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -718,11 +847,12 @@ var canvas = document.getElementById('playground'),
 	dt = 0,
 
 /******************************************************************************
-	
+
 	Constructors
 
 ******************************************************************************/
 Entity = require("./entity/entity"),
+Player = require("./entity/player"),
 GameState = require("./core/state"),
 
 /******************************************************************************
@@ -732,108 +862,122 @@ GameState = require("./core/state"),
 ******************************************************************************/
 Input = require('./core/input-manager'),
 Renderer = require("./core/renderer"),
+Resource = require('./utilities/resource'),
 
 /******************************************************************************
 
 	Main Instance Vars
 
 ******************************************************************************/
-player = new Entity(),
+//player = new Player(),
+player = Resource.loadPlayerDefinition(),
 title = new GameState('title'),
-game = new GameState('game');
+game = new GameState('game'),
+loading = new GameState('loading'),
+gameover = new GameState('gameover'),
 
+/******************************************************************************
+
+	Constants
+
+******************************************************************************/
+PLAYER_INPUT_MAP  = {
+	'left'  : 65, //a
+	'right' : 68, //d
+	'up'    : 87, //w
+	'down'  : 83, //s
+	'attack': 32  //spacebar
+};
+
+/******************************************************************************
+
+	Core Functions
+
+******************************************************************************/
 function init() {
-	//setup player
-	player.pos.y = 100;
-	player.pos.x = 100;
-
-	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
-		console.log(ev);
-	});
-	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
-		console.log(ev);
-	});
-
-	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-start-right.png", 250, function(ev) {
-		console.log(ev);
-	});
-	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-middle-right.png", 250, function(ev) {
-		console.log(ev);
-	});
-	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400, function(ev) {
-		console.log(ev);
-	});
-
-	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-start-left.png", 250, function(ev) {
-		console.log(ev);
-	});
-	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-middle-left.png", 250, function(ev) {
-		console.log(ev);
-	});
-	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400, function(ev) {
-		console.log(ev);
-	});
-
-	player.addAnimationCompletedCallback('attack-right', function() {
-		console.log('attack-right completed');
-		player.dirLock = false;
-		player.direction = 'right';
-	});
-
-	player.addAnimationCompletedCallback('attack-left', function() {
-		console.log('attack-left completed');
-		player.dirLock = false;
-		player.direction = 'left';
-	});
-
-	player.setAnimationLoop('attack-left', false);
-	player.setAnimationLoop('attack-right', false);
-
-	player.direction = "right";
-
-	//init with initial game state inputs?
+	//initialize input manager
 	Input.init();
 
 
-	Input.addInput('left', 65, function() {
-		player.vel.x = -0.2;
-		if (!player.dirLock) { player.direction = 'left'; }
-	}, function() { player.vel.x = 0; } );
 
-
-	Input.addInput('right', 68, function() {
+	//input 'right' -- state 'game'
+	game.addInput('right', 68, function() {
 		player.vel.x = 0.2;
 		if (!player.dirLock) { player.direction = 'right'; }
 	}, function() { player.vel.x = 0; } );
 
+	//input 'left' -- state 'game'
+	game.addInput('left', 65, function() {
+		player.vel.x = -0.2;
+		if (!player.dirLock) { player.direction = 'left'; }
+	}, function() { player.vel.x = 0; } );
 
-	Input.addInput('up', 87, function() {
+	//input 'up' -- state 'game'
+	game.addInput('up', 87, function() {
 		player.vel.y = -0.2;
 	}, function() { player.vel.y = 0; } );
 
+	//input 'down' -- state 'game'
+	game.addInput('down', 83,
 
-	Input.addInput('down', 83, function() {
-		player.vel.y = 0.2;
-	}, function() { player.vel.y = 0; } );
+		//keydownCallback
+		function() {
+			player.vel.y = 0.2;
+		},
 
-	Input.addInput('attack', 32, function() {
-		if (player.direction === 'left') {
-			player.direction = 'attack-left';
+		//keyupCallback
+		function() {
+			player.vel.y = 0;
 		}
-		else if (player.direction === 'right') {
-			player.direction = 'attack-right';
+	);
+
+	//input 'attack' -- state 'game'
+	game.addInput('attack', 32,
+
+		//keydownCallback
+		function() {
+			if (player.direction === 'left') {
+				player.direction = 'attack-left';
+			}
+			else if (player.direction === 'right') {
+				player.direction = 'attack-right';
+			}
+
+			player.dirLock = true;
 		}
+	);
 
-		player.dirLock = true;
-	});
+	//input 'start' -- state 'title'
+	title.addSystemInput('start', 13,
 
-	//set up initial game state
-	title.addPlayerToState(player);
-	title.setBackground("./src/resources/grass-background.png");
-	title.setForeground("./src/resources/grass-foreground.png");
+		//keydownCallback
+		function() {
+			console.log('start pressed');
+
+			//add the input for state game
+			Input.useState(game);
+
+			//set up the renderer to use state game
+			Renderer.useState(game);
+
+			//remove initial start input
+			Input.removeInput('start');
+		}
+	);
+
+	//add basic text for temporary title
+	title.plainText = '<! Super Party Horse !> Press Enter to play!';
+
+	//set up main game state
+	game.addPlayerToState(player);
+	game.setBackground("./src/resources/grass-background.png");
+	game.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
 	Renderer.init(ctx, canvas.width, canvas.height, title);
+
+	//set title state
+	Input.useState(title);
 }
 
 function update() {
@@ -842,9 +986,14 @@ function update() {
 	dt = now - prev;
 	prev = now;
 
+	//check for player input and update player pos
+	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
 	player.updateRungeKutta(dt);
+
+	//draw the game
 	Renderer.draw();
 
+	//set up next update loop
 	requestAnimationFrame(update);
 }
 
@@ -853,7 +1002,94 @@ init();
 
 //start main game!
 requestAnimationFrame(update);
-},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6}],8:[function(require,module,exports){
+
+},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6,"./entity/player":7,"./utilities/resource":9}],9:[function(require,module,exports){
+var Player = require('../entity/player');
+
+/******************************************************************************
+
+Manages the importing / creation of Entities from JSON files
+
+******************************************************************************/
+exports.loadResourceFile = function(path) {
+
+
+
+}
+
+/******************************************************************************
+
+Exports the given object as a resource file
+
+******************************************************************************/
+exports.exportObject = function(obj) {
+
+
+
+}
+
+/******************************************************************************
+
+Loads and returns a player object
+
+******************************************************************************/
+exports.loadPlayerDefinition = function() {
+
+  var player = new Player();
+
+  //set up player
+  player.pos.y = 100;
+  player.pos.x = 100;
+
+  player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
+    console.log(ev);
+  });
+  player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
+    console.log(ev);
+  });
+
+  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-start-right.png", 250, function(ev) {
+    console.log(ev);
+  });
+  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-middle-right.png", 250, function(ev) {
+    console.log(ev);
+  });
+  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400, function(ev) {
+    console.log(ev);
+  });
+
+  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-start-left.png", 250, function(ev) {
+    console.log(ev);
+  });
+  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-middle-left.png", 250, function(ev) {
+    console.log(ev);
+  });
+  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400, function(ev) {
+    console.log(ev);
+  });
+
+  player.addAnimationCompletedCallback('attack-right', function() {
+    console.log('attack-right completed');
+    player.dirLock = false;
+    player.direction = 'right';
+  });
+
+  player.addAnimationCompletedCallback('attack-left', function() {
+    console.log('attack-left completed');
+    player.dirLock = false;
+    player.direction = 'left';
+  });
+
+  player.setAnimationLoop('attack-left', false);
+  player.setAnimationLoop('attack-right', false);
+
+  player.direction = "right";
+
+  return player;
+
+}
+
+},{"../entity/player":7}],10:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -952,4 +1188,4 @@ exports.magnitude = function(v1) {
 exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
-},{}]},{},[7])
+},{}]},{},[8])

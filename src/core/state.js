@@ -20,6 +20,8 @@ var State = function State(name) {
 	};
 	this.inputs = [];
 	this.hud = null;
+	this.plainText = null;
+	this.optionalRenderingFunction = null;
 };
 
 /******************************************************************************
@@ -37,14 +39,13 @@ Setup enemies to the state; can pass in either a single enemy, or an array
 
 ******************************************************************************/
 State.prototype.addEnemyToState = function(enemy) {
-	if (typeof enemy === 'entity') {
-		this.enemies.push(enemy);
-	}
-
-	else if (enemy.length) {
+	if (enemy.length) {
 		for (var i = 0; i < enemy.length; i++) {
 			this.enemies.push(enemy[i]);
 		}
+	}
+	else {
+		this.enemies.push(enemy);
 	}
 }
 
@@ -54,14 +55,13 @@ Add NPCs to this State; can add single npcs or an array
 
 ******************************************************************************/
 State.prototype.addNPCToState = function(npc) {
-	if (typeof npc === 'entity') {
-		this.npcs.push(npc);
-	}
-
-	else if (npc.length) {
+	if (npc.length) {
 		for (var i = 0; i < npc.length; i++) {
 			this.npcs.push(npc[i]);
 		}
+	}
+	else {
+		this.npcs.push(npc);
 	}
 }
 
@@ -71,14 +71,13 @@ Add interactables to this State; single or an array
 
 ******************************************************************************/
 State.prototype.addInteractableToState = function(interactable) {
-	if (typeof interactable === 'entity') {
-		this.interactables.push(interactable);
-	}
-
-	else if (interactable.length) {
+	if (interactable.length) {
 		for (var i = 0; i < interactable.length; i++) {
 			this.interactables.push(interactable[i]);
-		}
+		}	
+	}
+	else {
+		this.interactables.push(interactable);
 	}
 }
 
@@ -91,6 +90,19 @@ State.prototype.addInput = function(name, keyCode, keydownCallback, keyupCallbac
 	//inputManager.addInput(name, keyCode, keydownCallback, keyupCallback);
 
 	this.inputs.push(inputManager.createInput(name, keyCode, keydownCallback, keyupCallback));
+};
+
+/******************************************************************************
+
+Adds a system input to this state, but not to the input manager
+
+******************************************************************************/
+State.prototype.addSystemInput = function(name, keyCode, keydownCallback) {
+	var input = inputManager.createInput(name, keyCode, keydownCallback);
+
+	input.isSystemInput = true;
+
+	this.inputs.push(input);
 };
 
 /******************************************************************************
@@ -142,6 +154,16 @@ State.prototype.setForeground = function(path, callback) {
 			callback();
 		}
 	});
+};
+
+/******************************************************************************
+
+Set any optional rendering function. set to 'null' if anything but a function
+is passed as a parameter.
+
+******************************************************************************/
+State.prototype.addOptionalRendering = function(callback) {
+	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
 };
 
 //export the State constructor
