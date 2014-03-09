@@ -25,9 +25,9 @@ exports.init = function(context, width, height, state) {
 /******************************************************************************
 
 Handles switching from gamestate to gamestate, but only for rendering purposes.
-Changing inputs for new gamestates is handled elsewhere. 
+Changing inputs for new gamestates is handled elsewhere.
 
-This function always assumes that the current underlying gamestate is the 
+This function always assumes that the current underlying gamestate is the
 most recent, so the player will always be passed from the current gamestate
 to the new gamestate
 
@@ -80,6 +80,10 @@ exports.draw = function(gameState) {
 
 			//draw enemies
 			if (renderState.enemies.length > 0) {
+
+				for (var i = 0; i < renderState.enemies.length; i++) {
+					renderState.enemies[i].draw(rend.ctx);
+				}
 
 			}
 

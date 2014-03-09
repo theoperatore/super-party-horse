@@ -8,6 +8,7 @@ var canvas = document.getElementById('playground'),
 	now = +new Date,
 	prev = +new Date,
 	dt = 0,
+	currState,
 
 /******************************************************************************
 
@@ -38,6 +39,7 @@ title = new GameState('title'),
 game = new GameState('game'),
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
+enemies = [],
 
 /******************************************************************************
 
@@ -70,6 +72,19 @@ function init() {
 	//set up 'gameover' game state
 
 	//load enemies for state game?
+	for (var i = 1; i < 5; i++) {
+
+
+		var jagwar = new Entity();
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) console.log(ev));
+		jagwar.pos.x = canvas.width - 10;
+		jagwar.pos.y = 50 * i;
+		jagwar.accel.x = -0.00001;
+
+		enemies.push(jagwar);
+	}
+
+	game.addEnemyToState(enemies);
 
 	//input 'right' -- state 'game'
 	game.addInput('right', 68,
@@ -156,6 +171,9 @@ function init() {
 			//set up the renderer to use state game
 			Renderer.useState(game);
 
+			//set currState
+			currState = game;
+
 			//remove initial start input
 			Input.removeInput('start');
 		}
@@ -174,6 +192,9 @@ function init() {
 
 	//set title state
 	Input.useState(title);
+
+	//set initial currState
+	currState = title;
 }
 
 function update() {
@@ -185,6 +206,17 @@ function update() {
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
 	player.updateRungeKutta(dt);
+
+
+	//if there are enemies to update...
+	if (currState.enemies.length != 0) {
+
+		//loop through and update them
+		for (var i = 0; i < enemies.length; i++) {
+			currState.enemies[i].updateRungeKutta(dt);
+		}
+
+	}
 
 	//draw the game
 	Renderer.draw();

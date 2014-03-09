@@ -246,9 +246,9 @@ exports.init = function(context, width, height, state) {
 /******************************************************************************
 
 Handles switching from gamestate to gamestate, but only for rendering purposes.
-Changing inputs for new gamestates is handled elsewhere. 
+Changing inputs for new gamestates is handled elsewhere.
 
-This function always assumes that the current underlying gamestate is the 
+This function always assumes that the current underlying gamestate is the
 most recent, so the player will always be passed from the current gamestate
 to the new gamestate
 
@@ -302,6 +302,10 @@ exports.draw = function(gameState) {
 			//draw enemies
 			if (renderState.enemies.length > 0) {
 
+				for (var i = 0; i < renderState.enemies.length; i++) {
+					renderState.enemies[i].draw(rend.ctx);
+				}
+
 			}
 
 			//draw player including upgrades
@@ -342,6 +346,7 @@ exports.draw = function(gameState) {
 	}
 
 }
+
 },{}],4:[function(require,module,exports){
 var inputManager = require('./input-manager'),
     imageManager = require('./image');
@@ -845,6 +850,7 @@ var canvas = document.getElementById('playground'),
 	now = +new Date,
 	prev = +new Date,
 	dt = 0,
+	currState,
 
 /******************************************************************************
 
@@ -852,7 +858,7 @@ var canvas = document.getElementById('playground'),
 
 ******************************************************************************/
 Entity = require("./entity/entity"),
-Player = require("./entity/player"),
+//Player = require("./entity/player"),
 GameState = require("./core/state"),
 
 /******************************************************************************
@@ -870,11 +876,12 @@ Resource = require('./utilities/resource'),
 
 ******************************************************************************/
 //player = new Player(),
-player = Resource.loadPlayerDefinition(),
+player,
 title = new GameState('title'),
 game = new GameState('game'),
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
+enemies = [],
 
 /******************************************************************************
 
@@ -895,27 +902,73 @@ PLAYER_INPUT_MAP  = {
 
 ******************************************************************************/
 function init() {
+
 	//initialize input manager
 	Input.init();
 
+	//load player
+	player = Resource.loadPlayerDefinition();
 
+	//set up 'loading' game state
+
+	//set up 'gameover' game state
+
+	//load enemies for state game?
+	for (var i = 1; i < 5; i++) {
+
+
+		var jagwar = new Entity();
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) console.log(ev));
+		jagwar.pos.x = canvas.width - 10;
+		jagwar.pos.y = 50 * i;
+		jagwar.accel.x = -0.00001;
+
+		enemies.push(jagwar);
+	}
+
+	game.addEnemyToState(enemies);
 
 	//input 'right' -- state 'game'
-	game.addInput('right', 68, function() {
-		player.vel.x = 0.2;
-		if (!player.dirLock) { player.direction = 'right'; }
-	}, function() { player.vel.x = 0; } );
+	game.addInput('right', 68,
+
+		function() {
+			player.vel.x = 0.2;
+			if (!player.dirLock) {
+				player.direction = 'right';
+			}
+		},
+
+		function() {
+			player.vel.x = 0;
+		}
+	);
 
 	//input 'left' -- state 'game'
-	game.addInput('left', 65, function() {
-		player.vel.x = -0.2;
-		if (!player.dirLock) { player.direction = 'left'; }
-	}, function() { player.vel.x = 0; } );
+	game.addInput('left', 65,
+
+		function() {
+			player.vel.x = -0.2;
+			if (!player.dirLock) {
+				player.direction = 'left';
+			}
+		},
+
+		function() {
+			player.vel.x = 0;
+		}
+	);
 
 	//input 'up' -- state 'game'
-	game.addInput('up', 87, function() {
-		player.vel.y = -0.2;
-	}, function() { player.vel.y = 0; } );
+	game.addInput('up', 87,
+
+		function() {
+			player.vel.y = -0.2;
+		},
+
+		function() {
+			player.vel.y = 0;
+		}
+	);
 
 	//input 'down' -- state 'game'
 	game.addInput('down', 83,
@@ -960,6 +1013,9 @@ function init() {
 			//set up the renderer to use state game
 			Renderer.useState(game);
 
+			//set currState
+			currState = game;
+
 			//remove initial start input
 			Input.removeInput('start');
 		}
@@ -978,6 +1034,9 @@ function init() {
 
 	//set title state
 	Input.useState(title);
+
+	//set initial currState
+	currState = title;
 }
 
 function update() {
@@ -989,6 +1048,17 @@ function update() {
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
 	player.updateRungeKutta(dt);
+
+
+	//if there are enemies to update...
+	if (currState.enemies.length != 0) {
+
+		//loop through and update them
+		for (var i = 0; i < enemies.length; i++) {
+			currState.enemies[i].updateRungeKutta(dt);
+		}
+
+	}
 
 	//draw the game
 	Renderer.draw();
@@ -1003,7 +1073,7 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6,"./entity/player":7,"./utilities/resource":9}],9:[function(require,module,exports){
+},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6,"./utilities/resource":9}],9:[function(require,module,exports){
 var Player = require('../entity/player');
 
 /******************************************************************************
@@ -1030,7 +1100,7 @@ exports.exportObject = function(obj) {
 
 /******************************************************************************
 
-Loads and returns a player object
+Loads and returns a player object based on the included definitions
 
 ******************************************************************************/
 exports.loadPlayerDefinition = function() {
@@ -1087,6 +1157,16 @@ exports.loadPlayerDefinition = function() {
 
   return player;
 
+}
+
+/******************************************************************************
+
+Loads and returns a single basic enemy entity
+
+******************************************************************************/
+exports.loadEnemyDefinition = function() {
+
+  
 }
 
 },{"../entity/player":7}],10:[function(require,module,exports){
