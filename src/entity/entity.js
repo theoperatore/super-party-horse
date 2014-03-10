@@ -38,7 +38,7 @@ var Entity = function Entity() {
 
 /******************************************************************************
 
-Adds a frame to the specified animation given by name. If the animation name 
+Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
@@ -141,6 +141,13 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	if (this.animations[this.direction] != 'undefined') {
 		this.animations[this.direction].update(dt)
 	}
+
+	//updating bounding boxes?
+	/**
+		Need to have a way to allow for different boxes depending on entity.
+		Entity specific?
+		Implement in player / enemy class?
+	**/
 };
 
 /******************************************************************************
@@ -152,12 +159,13 @@ Entity.prototype.draw = function(ctx) {
 	var img = this.animations[this.direction].getCurrImg();
 
 	if (img != null) {
-		ctx.drawImage(img, 
-		              this.pos.x, 
-		              this.pos.y, 
-		              this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth, 
-		              this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
-		             );	
+		ctx.drawImage(
+			img,
+		  this.pos.x,
+		  this.pos.y,
+		  this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth,
+		  this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
+		);
 	}
 };
 

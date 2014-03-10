@@ -20,7 +20,7 @@ pos1 = vect.add(pos1, pos2);     //same as statement above
 
 To summarize: using vect will always return a value or a new vector
               while invoking methods on vectors themselves will change
-              thie calling vector.
+              the calling vector.
 
 ******************************************************************************/
 

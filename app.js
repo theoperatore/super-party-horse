@@ -806,7 +806,7 @@ module.exports = Entity;
 var Entity = require('./entity');
 
 var Player = function Player() {
-	
+
 	//Player inherits from Entity
 	Entity.call(this);
 }
@@ -836,8 +836,9 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 	}
 };
 
-module.exports = Player;
 
+//export player constructor
+module.exports = Player;
 
 },{"./entity":6}],8:[function(require,module,exports){
 /******************************************************************************
@@ -1192,7 +1193,7 @@ pos1 = vect.add(pos1, pos2);     //same as statement above
 
 To summarize: using vect will always return a value or a new vector
               while invoking methods on vectors themselves will change
-              thie calling vector.
+              the calling vector.
 
 ******************************************************************************/
 
@@ -1268,4 +1269,5 @@ exports.magnitude = function(v1) {
 exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
+
 },{}]},{},[8])

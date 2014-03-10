@@ -1,7 +1,7 @@
 var Entity = require('./entity');
 
 var Player = function Player() {
-	
+
 	//Player inherits from Entity
 	Entity.call(this);
 }
@@ -31,5 +31,6 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 	}
 };
 
-module.exports = Player;
 
+//export player constructor
+module.exports = Player;
