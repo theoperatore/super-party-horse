@@ -205,7 +205,7 @@ function update() {
 
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
-	player.updateRungeKutta(dt);
+	player.update(dt);
 
 
 	//if there are enemies to update...

@@ -1,4 +1,71 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var vect = require('../utilities/vector2D');
+
+/******************************************************************************
+
+One collide-able boudning box.
+
+******************************************************************************/
+var AABB = function(realX, realY, x, y, width, height) {
+
+  //keep track of width and height of box
+  this.width = width;
+  this.height = height;
+
+  //bouding coords
+  this.minBoundX = realX + x;
+  this.minBoundY = realY + y;
+  this.maxBoundX = this.minBoundX + width;
+  this.maxBoundY = this.minBoundY + height;
+
+  //displacement from object space
+  this.offsetX = x;
+  this.offsetY = y;
+
+  //vector for center
+  this.center = vect.create( ((x + width) / 2), ((y + height) / 2) );
+}
+
+/******************************************************************************
+
+Returns true iff collision via overlap with other bounding box 'b';
+
+******************************************************************************/
+AABB.prototype.collidesWith = function(b) {
+  if (this.minBoundX > b.maxBoundX ||
+      this.minBoundY > b.maxBoundY ||
+      this.maxBoundX < b.minBoundX ||
+      this.maxBoundY < b.minBoundY)
+  {
+        return false;
+  }
+
+  return true;
+}
+
+/******************************************************************************
+
+Set the new uposition of this AABB; also updates center coords
+
+******************************************************************************/
+AABB.prototype.updatePos = function(realX, realY) {
+
+  //update bounding coords
+  this.minBoundX = realX + this.offsetX;
+  this.minBoundY = realY + this.offsetY;
+  this.maxBoundX = this.minBoundX + this.width;
+  this.maxBoundY = this.minBoundY + this.height;
+
+  //update center
+  this.center.x = (this.minBoundX + this.width) / 2;
+  this.center.y = (this.minBoundY + this.height) / 2;
+}
+
+
+//export the constructor
+module.exports = AABB;
+
+},{"../utilities/vector2D":11}],2:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -63,7 +130,7 @@ exports.batchLoad = function(paths, callback) {
 		tmpImg.src = paths[i];
 	}
 }
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /******************************************************************************
 
 Handles setting up game inputs and eventListeners for any game input.
@@ -218,7 +285,7 @@ exports.createInput = function(name, keyCode, keydownCallback, keyupCallback) {
 
 	return new Input(name, keyCode, keydownCallback, keyupCallback);
 }
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -347,7 +414,7 @@ exports.draw = function(gameState) {
 
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var inputManager = require('./input-manager'),
     imageManager = require('./image');
 
@@ -520,7 +587,7 @@ State.prototype.addOptionalRendering = function(callback) {
 module.exports = State;
 
 
-},{"./image":1,"./input-manager":2}],5:[function(require,module,exports){
+},{"./image":2,"./input-manager":3}],6:[function(require,module,exports){
 /******************************************************************************
 
 Private inner 'class' that represents one frame in an animation
@@ -635,7 +702,7 @@ Animation.prototype.reset = function() {
 module.exports = Animation;
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /******************************************************************************
 
 Describes any interactable object in the game. Can't decide yet if everything
@@ -676,7 +743,7 @@ var Entity = function Entity() {
 
 /******************************************************************************
 
-Adds a frame to the specified animation given by name. If the animation name 
+Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
@@ -779,6 +846,13 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	if (this.animations[this.direction] != 'undefined') {
 		this.animations[this.direction].update(dt)
 	}
+
+	//updating bounding boxes?
+	/**
+		Need to have a way to allow for different boxes depending on entity.
+		Entity specific?
+		Implement in player / enemy class?
+	**/
 };
 
 /******************************************************************************
@@ -790,30 +864,60 @@ Entity.prototype.draw = function(ctx) {
 	var img = this.animations[this.direction].getCurrImg();
 
 	if (img != null) {
-		ctx.drawImage(img, 
-		              this.pos.x, 
-		              this.pos.y, 
-		              this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth, 
-		              this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
-		             );	
+		ctx.drawImage(
+			img,
+		  this.pos.x,
+		  this.pos.y,
+		  this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth,
+		  this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
+		);
 	}
 };
 
-
 //export the Entity constructor
 module.exports = Entity;
-},{"../utilities/vector2D":10,"./animation":5}],7:[function(require,module,exports){
-var Entity = require('./entity');
+
+},{"../utilities/vector2D":11,"./animation":6}],8:[function(require,module,exports){
+var Entity = require('./entity'),
+		AABB = require('../core/boundingbox.js');
 
 var Player = function Player() {
 
 	//Player inherits from Entity
 	Entity.call(this);
+
+	//AABBs for the player
+	this.aabbs = [];
 }
 
 //inheritance
 Player.prototype = Object.create(Entity.prototype);
 
+/******************************************************************************
+
+Add a boundng box in the player object space; (0,0) is top left of player
+
+******************************************************************************/
+Player.prototype.addAABB = function(x, y, width, height) {
+	var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+	this.aabbs.push(box);
+}
+
+/******************************************************************************
+
+Update the player
+
+******************************************************************************/
+Player.prototype.update = function(dt) {
+
+	this.updateRungeKutta(dt);
+
+	for (var i = 0; i < this.aabbs.length; i++) {
+		this.aabbs[i].updatePos(this.pos.x, this.pos.y);
+	}
+
+}
 
 /******************************************************************************
 
@@ -840,7 +944,7 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 //export player constructor
 module.exports = Player;
 
-},{"./entity":6}],8:[function(require,module,exports){
+},{"../core/boundingbox.js":1,"./entity":7}],9:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -1048,7 +1152,7 @@ function update() {
 
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
-	player.updateRungeKutta(dt);
+	player.update(dt);
 
 
 	//if there are enemies to update...
@@ -1074,8 +1178,9 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":2,"./core/renderer":3,"./core/state":4,"./entity/entity":6,"./utilities/resource":9}],9:[function(require,module,exports){
-var Player = require('../entity/player');
+},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/entity":7,"./utilities/resource":10}],10:[function(require,module,exports){
+var Player = require('../entity/player'),
+    AABB = require('../core/boundingbox');
 
 /******************************************************************************
 
@@ -1156,6 +1261,13 @@ exports.loadPlayerDefinition = function() {
 
   player.direction = "right";
 
+  player.addAABB(
+    0,   //x coord of bounding box in object space
+    0,   //y coord of bounding box in object space
+    100, //width of bounding box
+    100  //height of bounding box
+  );
+
   return player;
 
 }
@@ -1167,10 +1279,10 @@ Loads and returns a single basic enemy entity
 ******************************************************************************/
 exports.loadEnemyDefinition = function() {
 
-  
+
 }
 
-},{"../entity/player":7}],10:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/player":8}],11:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -1270,4 +1382,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[8])
+},{}]},{},[9])

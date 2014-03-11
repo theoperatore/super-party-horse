@@ -1,4 +1,5 @@
-var Player = require('../entity/player');
+var Player = require('../entity/player'),
+    AABB = require('../core/boundingbox');
 
 /******************************************************************************
 
@@ -79,6 +80,13 @@ exports.loadPlayerDefinition = function() {
 
   player.direction = "right";
 
+  player.addAABB(
+    0,   //x coord of bounding box in object space
+    0,   //y coord of bounding box in object space
+    100, //width of bounding box
+    100  //height of bounding box
+  );
+
   return player;
 
 }
@@ -90,5 +98,5 @@ Loads and returns a single basic enemy entity
 ******************************************************************************/
 exports.loadEnemyDefinition = function() {
 
-  
+
 }

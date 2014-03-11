@@ -169,6 +169,5 @@ Entity.prototype.draw = function(ctx) {
 	}
 };
 
-
 //export the Entity constructor
 module.exports = Entity;
