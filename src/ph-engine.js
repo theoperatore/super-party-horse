@@ -5,8 +5,8 @@
 ******************************************************************************/
 var canvas = document.getElementById('playground'),
 	ctx = canvas.getContext("2d"),
-	now = +new Date,
-	prev = +new Date,
+	now = performance.now(),
+	prev = performance.now(),
 	dt = 0,
 	currState,
 
@@ -77,7 +77,7 @@ function init() {
 
 
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) console.log(ev));
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width - 10;
 		jagwar.pos.y = 50 * i;
 		jagwar.accel.x = -0.00001;
@@ -199,16 +199,17 @@ function init() {
 	currState = title;
 }
 
-function update() {
+function update(timestamp) {
+	//set up next update loop
+	requestAnimationFrame(update);
 
-	now = +new Date;
+	now = timestamp;
 	dt = now - prev;
 	prev = now;
 
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
 	player.update(dt);
-
 
 	//if there are enemies to update...
 	if (currState.enemies.length != 0) {
@@ -237,9 +238,6 @@ function update() {
 
 	//draw the game
 	Renderer.draw();
-
-	//set up next update loop
-	requestAnimationFrame(update);
 }
 
 //initialize game
