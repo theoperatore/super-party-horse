@@ -67,6 +67,7 @@ exports.loadPlayerDefinition = function() {
     console.log('attack-right completed');
     //player.dirLock = false;
     player.direction = 'right';
+    player.state = 'idle';
   });
 
   player.addAnimationCompletedCallback('attack-left', function() {
@@ -74,6 +75,7 @@ exports.loadPlayerDefinition = function() {
     //player.dirLock = false;
     //player.direction = 'left';
     player.direction = 'right';
+    player.state = 'idle';
   });
 
   player.setAnimationLoop('attack-left', false);

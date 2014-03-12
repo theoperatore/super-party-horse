@@ -8,6 +8,9 @@ var Player = function Player() {
 
 	//AABBs for the player
 	this.aabbs = [];
+
+	//state for player; idle or attacking
+	this.state = 'idle';
 }
 
 //inheritance

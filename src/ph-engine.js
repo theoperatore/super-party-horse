@@ -80,21 +80,21 @@ function init() {
 
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
-		jagwar.pos.x = canvas.width - 10;
-		jagwar.pos.y = 50 + (100 * i);
-		jagwar.accel.x = -0.00001;
-		jagwar.addAABB(0,0, 100, 100);
+		jagwar.pos.x = canvas.width - 50;
+		jagwar.pos.y = 45 + (100 * i);
+		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
 	}
 
-	for (var j = 0; j < 4; j++) {
+	for (var j = 0; j < 5; j++) {
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width + 150;
-		jagwar.pos.y = 75 + (100 * j);
-		jagwar.accel.x = -0.00001;
-		jagwar.addAABB(0,0, 100, 100);
+		jagwar.pos.y = 20 + (100 * j);
+		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
 
@@ -171,6 +171,7 @@ function init() {
 			}
 
 			player.dirLock = true;
+			player.state = 'attacking';
 		}
 	);
 
