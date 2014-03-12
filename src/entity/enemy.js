@@ -39,5 +39,6 @@ Enemy.prototype.update = function(dt) {
     this.aabbs[i].updatePos(this.pos.x, this.pos.y);
 
   }
-
 }
+
+module.exports = Enemy;

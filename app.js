@@ -65,7 +65,7 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":11}],2:[function(require,module,exports){
+},{"../utilities/vector2D":12}],2:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -703,6 +703,52 @@ module.exports = Animation;
 
 
 },{}],7:[function(require,module,exports){
+var Entity = require('./entity'),
+    AABB = require('../core/boundingbox');
+
+
+var Enemy = function() {
+
+  //inheritance
+  Entity.call(this);
+
+  //boundig boxes
+  this.aabbs = [];
+}
+
+//inheritance
+Enemy.prototype = Object.create(Entity.prototype);
+
+/******************************************************************************
+
+Add a new aabb to the enemy
+
+******************************************************************************/
+Enemy.prototype.addAABB = function(x, y, width, height) {
+  var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+  this.aabbs.push(box);
+}
+
+/******************************************************************************
+
+Update this enemy's position and bounding boxes
+
+******************************************************************************/
+Enemy.prototype.update = function(dt) {
+
+  this.updateRungeKutta(dt);
+
+  for (var i = 0; i < this.aabbs.length; i++) {
+
+    this.aabbs[i].updatePos(this.pos.x, this.pos.y);
+
+  }
+}
+
+module.exports = Enemy;
+
+},{"../core/boundingbox":1,"./entity":8}],8:[function(require,module,exports){
 /******************************************************************************
 
 Describes any interactable object in the game. Can't decide yet if everything
@@ -877,7 +923,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../utilities/vector2D":11,"./animation":6}],8:[function(require,module,exports){
+},{"../utilities/vector2D":12,"./animation":6}],9:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -944,7 +990,7 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 //export player constructor
 module.exports = Player;
 
-},{"../core/boundingbox.js":1,"./entity":7}],9:[function(require,module,exports){
+},{"../core/boundingbox.js":1,"./entity":8}],10:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -965,6 +1011,7 @@ var canvas = document.getElementById('playground'),
 Entity = require("./entity/entity"),
 //Player = require("./entity/player"),
 GameState = require("./core/state"),
+Enemy = require('./entity/enemy'),
 
 /******************************************************************************
 
@@ -1022,11 +1069,12 @@ function init() {
 	for (var i = 1; i < 5; i++) {
 
 
-		var jagwar = new Entity();
+		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) console.log(ev));
 		jagwar.pos.x = canvas.width - 10;
 		jagwar.pos.y = 50 * i;
 		jagwar.accel.x = -0.00001;
+		jagwar.addAABB(0,0, 100, 100);
 
 		enemies.push(jagwar);
 	}
@@ -1159,8 +1207,24 @@ function update() {
 	if (currState.enemies.length != 0) {
 
 		//loop through and update them
-		for (var i = 0; i < enemies.length; i++) {
-			currState.enemies[i].updateRungeKutta(dt);
+		for (var i = 0; i < currState.enemies.length; i++) {
+
+			if (currState.enemies[i]) {
+
+				currState.enemies[i].update(dt);
+
+				for (var j = 0; j < player.aabbs.length; j++) {
+					for (var k = 0; k < currState.enemies[i].aabbs.length; k++) {
+
+						if (player.aabbs[j].collidesWith(currState.enemies[i].aabbs[k])) {
+
+							//console.log('Collides');
+							currState.enemies.splice(i,1);
+							break;
+						}
+					}
+				}
+			}
 		}
 
 	}
@@ -1178,7 +1242,7 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/entity":7,"./utilities/resource":10}],10:[function(require,module,exports){
+},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/enemy":7,"./entity/entity":8,"./utilities/resource":11}],11:[function(require,module,exports){
 var Player = require('../entity/player'),
     AABB = require('../core/boundingbox');
 
@@ -1282,7 +1346,7 @@ exports.loadEnemyDefinition = function() {
 
 }
 
-},{"../core/boundingbox":1,"../entity/player":8}],11:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/player":9}],12:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -1382,4 +1446,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[9])
+},{}]},{},[10])
