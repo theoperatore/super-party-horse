@@ -64,10 +64,10 @@ exports.loadPlayerDefinition = function() {
   });
 
   //walk animations
-  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 200, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 200, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250, function(ev) { console.log(ev); });
 
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
