@@ -135,8 +135,7 @@ a:visited { color: #F07057; }
 .header {
   text-align: center;
   /*border-bottom: 3px solid #555;*/
-  margin-bottom: 1em;
-  height: 250px;
+  margin-bottom: 2em;
 }
 
 .header a {
@@ -270,5 +269,3 @@ ul {
 .post pre.terminal code {
   background-color: #333;
 }
-
-
