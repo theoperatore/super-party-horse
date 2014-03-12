@@ -65,14 +65,15 @@ exports.loadPlayerDefinition = function() {
 
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
-    player.dirLock = false;
+    //player.dirLock = false;
     player.direction = 'right';
   });
 
   player.addAnimationCompletedCallback('attack-left', function() {
     console.log('attack-left completed');
-    player.dirLock = false;
-    player.direction = 'left';
+    //player.dirLock = false;
+    //player.direction = 'left';
+    player.direction = 'right';
   });
 
   player.setAnimationLoop('attack-left', false);

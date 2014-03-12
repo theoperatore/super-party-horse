@@ -67,23 +67,37 @@ function init() {
 
 	//load player
 	player = Resource.loadPlayerDefinition();
+	player.direction = 'right';
+	player.dirLock = true;
 
 	//set up 'loading' game state
 
 	//set up 'gameover' game state
 
 	//load enemies for state game?
-	for (var i = 1; i < 5; i++) {
+	for (var i = 0; i < 5; i++) {
 
 
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width - 10;
-		jagwar.pos.y = 100 * i;
+		jagwar.pos.y = 50 + (100 * i);
 		jagwar.accel.x = -0.00001;
 		jagwar.addAABB(0,0, 100, 100);
 
 		enemies.push(jagwar);
+	}
+
+	for (var j = 0; j < 4; j++) {
+		var jagwar = new Enemy();
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
+		jagwar.pos.x = canvas.width + 150;
+		jagwar.pos.y = 75 + (100 * j);
+		jagwar.accel.x = -0.00001;
+		jagwar.addAABB(0,0, 100, 100);
+
+		enemies.push(jagwar);
+
 	}
 
 	game.addEnemyToState(enemies);
