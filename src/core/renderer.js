@@ -112,7 +112,7 @@ exports.draw = function(gameState) {
 
 			//draw foreground
 			if (renderState.scenery.foreground != null) {
-				rend.ctx.drawImage(renderState.scenery.foreground, 0, 300);
+				rend.ctx.drawImage(renderState.scenery.foreground, 0, rend.height - 250);
 			}
 
 			//draw hud
