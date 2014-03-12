@@ -63,10 +63,16 @@ exports.loadPlayerDefinition = function() {
     console.log(ev);
   });
 
+  //walk animations
+  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
+
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
     //player.dirLock = false;
-    player.direction = 'right';
+    player.setDirection('right');
     player.state = 'idle';
   });
 
@@ -74,7 +80,7 @@ exports.loadPlayerDefinition = function() {
     console.log('attack-left completed');
     //player.dirLock = false;
     //player.direction = 'left';
-    player.direction = 'right';
+    player.setDirection('right');
     player.state = 'idle';
   });
 

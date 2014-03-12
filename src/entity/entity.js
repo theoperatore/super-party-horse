@@ -82,6 +82,19 @@ Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
 
 /******************************************************************************
 
+Sets the new direction and resets the preveious direction's animation
+
+******************************************************************************/
+Entity.prototype.setDirection = function(dir) {
+	if (this.animations[this.direction]) {
+		this.animations[this.direction].reset();
+
+		this.direction = dir || this.direction;
+	}
+}
+
+/******************************************************************************
+
 Seems like acceleration is acting like veloctiy....
 
 ******************************************************************************/

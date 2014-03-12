@@ -849,6 +849,19 @@ Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
 
 /******************************************************************************
 
+Sets the new direction and resets the preveious direction's animation
+
+******************************************************************************/
+Entity.prototype.setDirection = function(dir) {
+	if (this.animations[this.direction]) {
+		this.animations[this.direction].reset();
+
+		this.direction = dir || this.direction;
+	}
+}
+
+/******************************************************************************
+
 Seems like acceleration is acting like veloctiy....
 
 ******************************************************************************/
@@ -1060,11 +1073,11 @@ enemies = [],
 
 ******************************************************************************/
 PLAYER_INPUT_MAP  = {
+	'attack': 32, //spacebar
 	'left'  : 65, //a
 	'right' : 68, //d
 	'up'    : 87, //w
-	'down'  : 83, //s
-	'attack': 32  //spacebar
+	'down'  : 83  //s
 };
 
 /******************************************************************************
@@ -1091,7 +1104,8 @@ function init() {
 
 
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width - 50;
 		jagwar.pos.y = 45 + (100 * i);
 		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
@@ -1102,7 +1116,8 @@ function init() {
 
 	for (var j = 0; j < 5; j++) {
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width + 150;
 		jagwar.pos.y = 20 + (100 * j);
 		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
@@ -1112,6 +1127,18 @@ function init() {
 
 	}
 
+	/*{
+		var jagwar = new Enemy();
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
+		jagwar.pos.x = canvas.width / 2;
+		jagwar.pos.y = canvas.height / 2
+		jagwar.addAABB(0,0, 150, 63);
+
+		enemies.push(jagwar);
+
+	}*/
+
 	game.addEnemyToState(enemies);
 
 	//input 'right' -- state 'game'
@@ -1119,13 +1146,17 @@ function init() {
 
 		function() {
 			player.vel.x = 0.2;
-			if (!player.dirLock) {
-				player.direction = 'right';
+
+			if (player.state != 'attacking') {
+					player.direction = 'walk-right';
 			}
 		},
 
 		function() {
 			player.vel.x = 0;
+			if (player.state != 'attacking') {
+					player.setDirection('right');
+			}
 		}
 	);
 
@@ -1134,13 +1165,16 @@ function init() {
 
 		function() {
 			player.vel.x = -0.2;
-			if (!player.dirLock) {
-				player.direction = 'left';
+			if (player.state != 'attacking') {
+					player.direction = 'walk-right';
 			}
 		},
 
 		function() {
 			player.vel.x = 0;
+			if (player.state != 'attacking') {
+					player.setDirection('right');
+			}
 		}
 	);
 
@@ -1148,10 +1182,16 @@ function init() {
 	game.addInput('up', 87,
 
 		function() {
+			if (player.state != 'attacking') {
+					player.direction = 'walk-right';
+			}
 			player.vel.y = -0.2;
 		},
 
 		function() {
+			if (player.state != 'attacking') {
+					player.setDirection('right');
+			}
 			player.vel.y = 0;
 		}
 	);
@@ -1161,11 +1201,18 @@ function init() {
 
 		//keydownCallback
 		function() {
+			if (player.state != 'attacking') {
+					player.direction = 'walk-right';
+			}
+
 			player.vel.y = 0.2;
 		},
 
 		//keyupCallback
 		function() {
+			if (player.state != 'attacking') {
+					player.setDirection('right');
+			}
 			player.vel.y = 0;
 		}
 	);
@@ -1175,13 +1222,8 @@ function init() {
 
 		//keydownCallback
 		function() {
-			if (player.direction === 'left') {
-				player.direction = 'attack-left';
-			}
-			else if (player.direction === 'right') {
-				player.direction = 'attack-right';
-			}
 
+			player.direction = 'attack-right';
 			player.dirLock = true;
 			player.state = 'attacking';
 		}
@@ -1338,10 +1380,16 @@ exports.loadPlayerDefinition = function() {
     console.log(ev);
   });
 
+  //walk animations
+  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 200, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 200, function(ev) { console.log(ev); });
+
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
     //player.dirLock = false;
-    player.direction = 'right';
+    player.setDirection('right');
     player.state = 'idle';
   });
 
@@ -1349,7 +1397,7 @@ exports.loadPlayerDefinition = function() {
     console.log('attack-left completed');
     //player.dirLock = false;
     //player.direction = 'left';
-    player.direction = 'right';
+    player.setDirection('right');
     player.state = 'idle';
   });
 
