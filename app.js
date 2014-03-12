@@ -307,7 +307,7 @@ exports.init = function(context, width, height, state) {
 	rend.ctx = context;
 	rend.width = width;
 	rend.height = height;
-	rend.state = state || new State('dummy');
+	rend.state = state || null;
 }
 
 /******************************************************************************
@@ -370,7 +370,17 @@ exports.draw = function(gameState) {
 			if (renderState.enemies.length > 0) {
 
 				for (var i = 0; i < renderState.enemies.length; i++) {
-					renderState.enemies[i].draw(rend.ctx);
+					var e = renderState.enemies[i];
+
+					if (e != null) {
+							e.draw(rend.ctx);
+
+							//draw aabb
+							rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+																	e.aabbs[0].minBoundY,
+																	e.aabbs[0].width,
+																	e.aabbs[0].height);
+					}
 				}
 
 			}
@@ -380,6 +390,12 @@ exports.draw = function(gameState) {
 
 				//draw the base of the character
 				renderState.player.draw(rend.ctx);
+
+				//draw aabb
+				rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
+														renderState.player.aabbs[0].minBoundY,
+														renderState.player.aabbs[0].width,
+														renderState.player.aabbs[0].height);
 			}
 
 			//draw foreground
@@ -1072,7 +1088,7 @@ function init() {
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width - 10;
-		jagwar.pos.y = 50 * i;
+		jagwar.pos.y = 100 * i;
 		jagwar.accel.x = -0.00001;
 		jagwar.addAABB(0,0, 100, 100);
 
@@ -1200,8 +1216,6 @@ function update(timestamp) {
 	dt = now - prev;
 	prev = now;
 
-	console.log(dt);
-
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
 	player.update(dt);
@@ -1212,19 +1226,18 @@ function update(timestamp) {
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
 
-			if (currState.enemies[i]) {
+			if (currState.enemies[i] != null) {
 
 				currState.enemies[i].update(dt);
 
-				for (var j = 0; j < player.aabbs.length; j++) {
-					for (var k = 0; k < currState.enemies[i].aabbs.length; k++) {
+				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-						if (player.aabbs[j].collidesWith(currState.enemies[i].aabbs[k])) {
+					//causes a slight frame skip
+					//currState.enemies.splice(i,1);
 
-							currState.enemies.splice(i,1);
-							break;
-						}
-					}
+					currState.enemies[i] = null;
+
+					continue;
 				}
 			}
 		}

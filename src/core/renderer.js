@@ -19,7 +19,7 @@ exports.init = function(context, width, height, state) {
 	rend.ctx = context;
 	rend.width = width;
 	rend.height = height;
-	rend.state = state || new State('dummy');
+	rend.state = state || null;
 }
 
 /******************************************************************************
@@ -82,7 +82,17 @@ exports.draw = function(gameState) {
 			if (renderState.enemies.length > 0) {
 
 				for (var i = 0; i < renderState.enemies.length; i++) {
-					renderState.enemies[i].draw(rend.ctx);
+					var e = renderState.enemies[i];
+
+					if (e != null) {
+							e.draw(rend.ctx);
+
+							//draw aabb
+							rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+																	e.aabbs[0].minBoundY,
+																	e.aabbs[0].width,
+																	e.aabbs[0].height);
+					}
 				}
 
 			}
@@ -92,6 +102,12 @@ exports.draw = function(gameState) {
 
 				//draw the base of the character
 				renderState.player.draw(rend.ctx);
+
+				//draw aabb
+				rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
+														renderState.player.aabbs[0].minBoundY,
+														renderState.player.aabbs[0].width,
+														renderState.player.aabbs[0].height);
 			}
 
 			//draw foreground

@@ -79,7 +79,7 @@ function init() {
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 1000, function(ev) { console.log(ev) });
 		jagwar.pos.x = canvas.width - 10;
-		jagwar.pos.y = 50 * i;
+		jagwar.pos.y = 100 * i;
 		jagwar.accel.x = -0.00001;
 		jagwar.addAABB(0,0, 100, 100);
 
@@ -217,19 +217,18 @@ function update(timestamp) {
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
 
-			if (currState.enemies[i]) {
+			if (currState.enemies[i] != null) {
 
 				currState.enemies[i].update(dt);
 
-				for (var j = 0; j < player.aabbs.length; j++) {
-					for (var k = 0; k < currState.enemies[i].aabbs.length; k++) {
+				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-						if (player.aabbs[j].collidesWith(currState.enemies[i].aabbs[k])) {
+					//causes a slight frame skip
+					//currState.enemies.splice(i,1);
 
-							currState.enemies.splice(i,1);
-							break;
-						}
-					}
+					currState.enemies[i] = null;
+
+					continue;
 				}
 			}
 		}
