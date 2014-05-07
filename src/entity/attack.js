@@ -1,4 +1,5 @@
-var Entity = require('./entity');
+var Entity = require('./entity'),
+    AABB = require('../core/boundingbox');
 
 //
 //
@@ -22,9 +23,16 @@ var Attack = function() {
 Attack.prototype = Object.create(Entity.prototype);
 
 //
+// Add a new bounding box to the attack
+//
+Attack.prototype.addAABB = function(x, y, width, height) {
+  var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+  this.aabbs.push(box);
+}
+
 //
 // Update this attack taking into account the associated entity's realX/Y pos.
-//
 //
 Attack.prototype.update = function(dt, nrX, nrY) {
 

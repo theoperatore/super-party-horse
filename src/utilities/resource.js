@@ -51,25 +51,25 @@ exports.loadPlayerDefinition = function() {
   player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
   player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
 
-  //add basic attack to list of known attacks.
-  //this should be player.addAttack(attackName, attackObj, x, y); x/y in player space
-  //player.attacks['basic'] = basicAttack;
+  //setup basic attack
   basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
   basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
 
+  //configure basic attack
   basicAttack.realX = player.pos.x;
   basicAttack.realY = player.pos.y;
   basicAttack.objX = 150;
   basicAttack.objY = 20;
+  basicAttack.addAABB(0,0,63,51);
 
+  //add basic attack to player
   player.addAttack('basic', basicAttack);
 
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
-    //player.dirLock = false;
     player.setDirection('right');
     player.state = 'idle';
-    //player.removeAttack('basic');
+    player.removeAttack('basic');
   });
 
   player.addAnimationCompletedCallback('attack-left', function() {

@@ -732,7 +732,8 @@ Animation.prototype.reset = function() {
 module.exports = Animation;
 
 },{}],7:[function(require,module,exports){
-var Entity = require('./entity');
+var Entity = require('./entity'),
+    AABB = require('../core/boundingbox');
 
 //
 //
@@ -756,9 +757,16 @@ var Attack = function() {
 Attack.prototype = Object.create(Entity.prototype);
 
 //
+// Add a new bounding box to the attack
+//
+Attack.prototype.addAABB = function(x, y, width, height) {
+  var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+  this.aabbs.push(box);
+}
+
 //
 // Update this attack taking into account the associated entity's realX/Y pos.
-//
 //
 Attack.prototype.update = function(dt, nrX, nrY) {
 
@@ -776,7 +784,7 @@ Attack.prototype.update = function(dt, nrX, nrY) {
 //export the constructor
 module.exports = Attack;
 
-},{"./entity":9}],8:[function(require,module,exports){
+},{"../core/boundingbox":1,"./entity":9}],8:[function(require,module,exports){
 var Entity = require('./entity'),
     AABB = require('../core/boundingbox');
 
@@ -1077,9 +1085,11 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 
 		playerInput = inputCollection[inputMap[name]] || null;
 
+		//running into problems where the animation is still playing while input
+		//is continuing to add things to arrays during animation play.
+		//need to find a way to 'taint' to denote that it should only be tracked
+		//once.
 		if (playerInput != null && playerInput.isPressed) {
-
-			//console.log(name, inputCollection[inputMap[name]].isPressed);
 
 			inputCollection[inputMap[name]].keydownCallback();
 		}
@@ -1094,10 +1104,20 @@ update.
 ******************************************************************************/
 Player.prototype.attack = function(attackString) {
 
-	var curr = this.attacks[attackString];
+	var curr = this.attacks[attackString],
+			found = false;
 
 	if (curr) {
-		this.currAttacks.push(curr);
+
+		//
+		// only add if it doesn't already exist?
+		//
+
+		for (var i = 0; i < this.currAttacks.length; i++) {
+			found = (curr === this.currAttacks[i]) ? true : false;
+		}
+
+		if (!found) { this.currAttacks.push(curr) };
 	}
 	else {
 		console.log('undefined attackString: ', attackString);
@@ -1113,11 +1133,16 @@ Remove the given attack from the current list of attacks to render and update
 Player.prototype.removeAttack = function(attackString) {
 	var curr = this.attacks[attackString];
 
-	console.log('removing attack: ', attackString);
-
 	if (curr) {
 		//this.currAttacks.split(curr);
 		//console.log('should remove attack');
+		for (var i = 0; i < this.currAttacks.length; i++) {
+			if (this.currAttacks[i] === curr) {
+				this.currAttacks.splice(i,1);
+				console.log('currAttacks.length: ', this.currAttacks.length);
+				break;
+			}
+		}
 	}
 	else {
 		console.log('undefined attackString: ', attackString);
@@ -1422,19 +1447,28 @@ function update(timestamp) {
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
 
-			if (currState.enemies[i] != null) {
+			if (currState.enemies[i]) {
 
 				currState.enemies[i].update(dt);
 
-				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
+				//if the player collides with enemy
+				//if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {}
 
-					//causes a slight frame skip -- think of way to remove without frameskip
-					//currState.enemies.splice(i,1);
+				//if player attacks collide with enemy
+				//needs to be as small as possible -- fix multiple inputs/animation effect.
+				for (var a = 0; a < player.currAttacks.length; a++) {
 
-					currState.enemies[i] = null;
+						if (player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-					continue;
+							//remove enemy from array
+							currState.enemies.splice(i,1);
+							break;
+
+						}
+
+
 				}
+
 			}
 		}
 
@@ -1504,25 +1538,25 @@ exports.loadPlayerDefinition = function() {
   player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
   player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
 
-  //add basic attack to list of known attacks.
-  //this should be player.addAttack(attackName, attackObj, x, y); x/y in player space
-  //player.attacks['basic'] = basicAttack;
+  //setup basic attack
   basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
   basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
 
+  //configure basic attack
   basicAttack.realX = player.pos.x;
   basicAttack.realY = player.pos.y;
   basicAttack.objX = 150;
   basicAttack.objY = 20;
+  basicAttack.addAABB(0,0,63,51);
 
+  //add basic attack to player
   player.addAttack('basic', basicAttack);
 
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
-    //player.dirLock = false;
     player.setDirection('right');
     player.state = 'idle';
-    //player.removeAttack('basic');
+    player.removeAttack('basic');
   });
 
   player.addAnimationCompletedCallback('attack-left', function() {

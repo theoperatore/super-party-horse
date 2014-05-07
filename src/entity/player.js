@@ -71,9 +71,11 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 
 		playerInput = inputCollection[inputMap[name]] || null;
 
+		//running into problems where the animation is still playing while input
+		//is continuing to add things to arrays during animation play.
+		//need to find a way to 'taint' to denote that it should only be tracked
+		//once.
 		if (playerInput != null && playerInput.isPressed) {
-
-			//console.log(name, inputCollection[inputMap[name]].isPressed);
 
 			inputCollection[inputMap[name]].keydownCallback();
 		}
@@ -88,10 +90,19 @@ update.
 ******************************************************************************/
 Player.prototype.attack = function(attackString) {
 
-	var curr = this.attacks[attackString];
+	var curr = this.attacks[attackString],
+			found = false;
 
 	if (curr) {
-		this.currAttacks.push(curr);
+
+		//
+		// only add if it doesn't already exist? Might work for now...
+		//
+		for (var i = 0; i < this.currAttacks.length; i++) {
+			found = (curr === this.currAttacks[i]) ? true : false;
+		}
+
+		if (!found) { this.currAttacks.push(curr) };
 	}
 	else {
 		console.log('undefined attackString: ', attackString);
@@ -107,11 +118,13 @@ Remove the given attack from the current list of attacks to render and update
 Player.prototype.removeAttack = function(attackString) {
 	var curr = this.attacks[attackString];
 
-	console.log('removing attack: ', attackString);
-
 	if (curr) {
-		//this.currAttacks.split(curr);
-		//console.log('should remove attack');
+		for (var i = 0; i < this.currAttacks.length; i++) {
+			if (this.currAttacks[i] === curr) {
+				this.currAttacks.splice(i,1);
+				break;
+			}
+		}
 	}
 	else {
 		console.log('undefined attackString: ', attackString);

@@ -264,19 +264,31 @@ function update(timestamp) {
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
 
-			if (currState.enemies[i] != null) {
+			if (currState.enemies[i]) {
 
 				currState.enemies[i].update(dt);
 
+				//if the player collides with enemy
 				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-					//causes a slight frame skip -- think of way to remove without frameskip
-					//currState.enemies.splice(i,1);
+					//player hurt!
 
-					currState.enemies[i] = null;
-
-					continue;
 				}
+
+				//if player attacks collide with enemy
+				for (var a = 0; a < player.currAttacks.length; a++) {
+
+						if (player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
+
+							//remove enemy from array
+							currState.enemies.splice(i,1);
+							break;
+
+						}
+
+
+				}
+
 			}
 		}
 
