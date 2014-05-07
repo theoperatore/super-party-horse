@@ -61,8 +61,8 @@ PLAYER_INPUT_MAP  = {
 function init() {
 
 	//FULL SCREEN PARTY HORSE
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	canvas.width = document.body.clientWidth;
+	canvas.height = document.body.clientHeight;
 
 	// canvas dimensions
 	//var width = 1000;
@@ -120,7 +120,7 @@ function init() {
 	game.addInput('right', 68,
 
 		function() {
-			player.vel.x = 0.2;
+			player.vel.x = 0.4;
 
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
@@ -139,7 +139,7 @@ function init() {
 	game.addInput('left', 65,
 
 		function() {
-			player.vel.x = -0.2;
+			player.vel.x = -0.4;
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
 			}
@@ -160,7 +160,7 @@ function init() {
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
 			}
-			player.vel.y = -0.2;
+			player.vel.y = -0.4;
 		},
 
 		function() {
@@ -180,7 +180,7 @@ function init() {
 					player.direction = 'walk-right';
 			}
 
-			player.vel.y = 0.2;
+			player.vel.y = 0.4;
 		},
 
 		//keyupCallback
@@ -198,10 +198,13 @@ function init() {
 		//keydownCallback
 		function() {
 
-			player.direction = 'attack-right';
-			player.dirLock = true;
-			player.state = 'attacking';
-			player.attack('basic');
+			if (player.state != 'attacking') {
+				player.direction = 'attack-right';
+				player.dirLock = true;
+				player.state = 'attacking';
+				player.attack('basic');
+			}
+
 
 
 		}

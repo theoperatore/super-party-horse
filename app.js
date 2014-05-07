@@ -1110,9 +1110,8 @@ Player.prototype.attack = function(attackString) {
 	if (curr) {
 
 		//
-		// only add if it doesn't already exist?
+		// only add if it doesn't already exist? Might work for now...
 		//
-
 		for (var i = 0; i < this.currAttacks.length; i++) {
 			found = (curr === this.currAttacks[i]) ? true : false;
 		}
@@ -1134,12 +1133,9 @@ Player.prototype.removeAttack = function(attackString) {
 	var curr = this.attacks[attackString];
 
 	if (curr) {
-		//this.currAttacks.split(curr);
-		//console.log('should remove attack');
 		for (var i = 0; i < this.currAttacks.length; i++) {
 			if (this.currAttacks[i] === curr) {
 				this.currAttacks.splice(i,1);
-				console.log('currAttacks.length: ', this.currAttacks.length);
 				break;
 			}
 		}
@@ -1244,8 +1240,8 @@ PLAYER_INPUT_MAP  = {
 function init() {
 
 	//FULL SCREEN PARTY HORSE
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	canvas.width = document.body.clientWidth;
+	canvas.height = document.body.clientHeight;
 
 	// canvas dimensions
 	//var width = 1000;
@@ -1303,7 +1299,7 @@ function init() {
 	game.addInput('right', 68,
 
 		function() {
-			player.vel.x = 0.2;
+			player.vel.x = 0.4;
 
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
@@ -1322,7 +1318,7 @@ function init() {
 	game.addInput('left', 65,
 
 		function() {
-			player.vel.x = -0.2;
+			player.vel.x = -0.4;
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
 			}
@@ -1343,7 +1339,7 @@ function init() {
 			if (player.state != 'attacking') {
 					player.direction = 'walk-right';
 			}
-			player.vel.y = -0.2;
+			player.vel.y = -0.4;
 		},
 
 		function() {
@@ -1363,7 +1359,7 @@ function init() {
 					player.direction = 'walk-right';
 			}
 
-			player.vel.y = 0.2;
+			player.vel.y = 0.4;
 		},
 
 		//keyupCallback
@@ -1381,10 +1377,13 @@ function init() {
 		//keydownCallback
 		function() {
 
-			player.direction = 'attack-right';
-			player.dirLock = true;
-			player.state = 'attacking';
-			player.attack('basic');
+			if (player.state != 'attacking') {
+				player.direction = 'attack-right';
+				player.dirLock = true;
+				player.state = 'attacking';
+				player.attack('basic');
+			}
+
 
 
 		}
@@ -1452,10 +1451,13 @@ function update(timestamp) {
 				currState.enemies[i].update(dt);
 
 				//if the player collides with enemy
-				//if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {}
+				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
+
+					//player hurt!
+
+				}
 
 				//if player attacks collide with enemy
-				//needs to be as small as possible -- fix multiple inputs/animation effect.
 				for (var a = 0; a < player.currAttacks.length; a++) {
 
 						if (player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
