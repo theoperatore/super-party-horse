@@ -16,7 +16,6 @@ var canvas = document.getElementById('playground'),
 
 ******************************************************************************/
 Entity = require("./entity/entity"),
-//Player = require("./entity/player"),
 GameState = require("./core/state"),
 Enemy = require('./entity/enemy'),
 
@@ -34,7 +33,6 @@ Resource = require('./utilities/resource'),
 	Main Instance Vars
 
 ******************************************************************************/
-//player = new Player(),
 player,
 title = new GameState('title'),
 game = new GameState('game'),
@@ -62,8 +60,19 @@ PLAYER_INPUT_MAP  = {
 ******************************************************************************/
 function init() {
 
+	//FULL SCREEN PARTY HORSE
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+
+	// canvas dimensions
+	//var width = 1000;
+	//var height = 500;
+
+	// retina
+	var dpr = window.devicePixelRatio || 1;
+	//canvas.width = width*dpr;
+	//canvas.height = height*dpr;
+	//canvas.getContext("2d").scale(dpr, dpr);
 
 	//initialize input manager
 	Input.init();
@@ -82,11 +91,11 @@ function init() {
 
 
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
 		jagwar.pos.x = canvas.width - 50;
 		jagwar.pos.y = 45 + (100 * i);
-		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
@@ -94,28 +103,16 @@ function init() {
 
 	for (var j = 0; j < 5; j++) {
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
 		jagwar.pos.x = canvas.width + 150;
 		jagwar.pos.y = 20 + (100 * j);
-		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
 
 	}
-
-	/*{
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
-		jagwar.pos.x = canvas.width / 2;
-		jagwar.pos.y = canvas.height / 2
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-
-	}*/
 
 	game.addEnemyToState(enemies);
 
@@ -204,6 +201,9 @@ function init() {
 			player.direction = 'attack-right';
 			player.dirLock = true;
 			player.state = 'attacking';
+			player.attack('basic');
+
+
 		}
 	);
 
@@ -270,7 +270,7 @@ function update(timestamp) {
 
 				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-					//causes a slight frame skip
+					//causes a slight frame skip -- think of way to remove without frameskip
 					//currState.enemies.splice(i,1);
 
 					currState.enemies[i] = null;

@@ -11,7 +11,7 @@ var AABB = function(realX, realY, x, y, width, height) {
   this.width = width;
   this.height = height;
 
-  //bouding coords
+  //bounding coords
   this.minBoundX = realX + x;
   this.minBoundY = realY + y;
   this.maxBoundX = this.minBoundX + width;

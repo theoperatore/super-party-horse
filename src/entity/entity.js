@@ -12,7 +12,8 @@ override the drawing and physics update functions.
 
 ******************************************************************************/
 var vect = require("../utilities/vector2D"),
-	Animation = require('./animation');
+	  Animation = require('./animation'),
+		AABB = require('../core/boundingbox');
 
 var Entity = function Entity() {
 	this.pos = vect.create(0,0);
@@ -34,6 +35,7 @@ var Entity = function Entity() {
 		scaledWidth  : 0.5,
 		scaledHeight : 0.5
 	};
+	this.aabbs = [];
 }
 
 /******************************************************************************
@@ -42,9 +44,9 @@ Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
-Entity.prototype.addFrame = function(animation, path, ms, loadCallback) {
+Entity.prototype.addFrame = function(animation, path, ms, completedCallback) {
 	var anim = this.animations[animation] || new Animation();
-	anim.addFrame(path, ms, loadCallback);
+	anim.addFrame(path, ms, completedCallback);
 	this.animations[animation] = anim;
 
 	//console.log(this.animations);
@@ -151,16 +153,14 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	this.vel.y += this.accel.y * dt;
 
 	//update animations
-	if (this.animations[this.direction] != 'undefined') {
+	if (this.animations[this.direction]) {
 		this.animations[this.direction].update(dt)
 	}
 
 	//updating bounding boxes?
-	/**
-		Need to have a way to allow for different boxes depending on entity.
-		Entity specific?
-		Implement in player / enemy class?
-	**/
+	for (var i = 0; i < this.aabbs.length; i++) {
+		this.aabbs[i].updatePos(this.pos.x, this.pos.y);
+	}
 };
 
 /******************************************************************************
@@ -169,7 +169,8 @@ Draw this entity to the screen with the given context
 
 ******************************************************************************/
 Entity.prototype.draw = function(ctx) {
-	var img = this.animations[this.direction].getCurrImg();
+	var anim = this.animations[this.direction],
+		img = (anim) ? anim.getCurrImg() : null;
 
 	if (img != null) {
 		ctx.drawImage(

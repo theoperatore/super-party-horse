@@ -12,7 +12,7 @@ var AABB = function(realX, realY, x, y, width, height) {
   this.width = width;
   this.height = height;
 
-  //bouding coords
+  //bounding coords
   this.minBoundX = realX + x;
   this.minBoundY = realY + y;
   this.maxBoundX = this.minBoundX + width;
@@ -65,7 +65,7 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":12}],2:[function(require,module,exports){
+},{"../utilities/vector2D":13}],2:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -376,10 +376,10 @@ exports.draw = function(gameState) {
 							e.draw(rend.ctx);
 
 							//draw aabb
-							rend.ctx.strokeRect(e.aabbs[0].minBoundX,
-																	e.aabbs[0].minBoundY,
-																	e.aabbs[0].width,
-																	e.aabbs[0].height);
+							//rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+							//					e.aabbs[0].minBoundY,
+							//					e.aabbs[0].width,
+							//					e.aabbs[0].height);
 					}
 				}
 
@@ -392,10 +392,10 @@ exports.draw = function(gameState) {
 				renderState.player.draw(rend.ctx);
 
 				//draw aabb
-				rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
-														renderState.player.aabbs[0].minBoundY,
-														renderState.player.aabbs[0].width,
-														renderState.player.aabbs[0].height);
+				//rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
+				//					renderState.player.aabbs[0].minBoundY,
+				//					renderState.player.aabbs[0].width,
+				//					renderState.player.aabbs[0].height);
 			}
 
 			//draw foreground
@@ -609,23 +609,30 @@ module.exports = State;
 Private inner 'class' that represents one frame in an animation
 
 ******************************************************************************/
-var _Frame = function _Frame(path, ms, callback) {
+var _Frame = function _Frame(path, ms, completeCallback) {
 	this.img = new Image();
 	this.frameTime = ms;
 
-	callback = (typeof callback === 'function') ? callback : function() {};
+	//loadCallback = (typeof loadCallback === 'function') ? loadCallback : function() {};
 
-	this.img.addEventListener('load', callback( {
+	/*this.img.addEventListener('load', loadCallback( {
 		message : path + " -- loaded",
 		frame   : this
 	}));
+	*/
+
+	this.img.addEventListener('load', function(ev) {
+		console.log('loaded:', path, ' -- frame: ', this);
+	});
 
 	this.img.src = path;
+
+	this.completedCallback = (typeof completeCallback === 'function') ? completeCallback : null;
 }
 
 /******************************************************************************
 
-Defines an animation as an ordered array of images to be shown based on 
+Defines an animation as an ordered array of images to be shown based on
 certain conditions and after a certain period of time.
 
 ******************************************************************************/
@@ -640,12 +647,12 @@ var Animation = function Animation() {
 
 /******************************************************************************
 
-Add a frame to this animation. This function accepts only strings paths to 
+Add a frame to this animation. This function accepts only strings paths to
 images.
 
 ******************************************************************************/
-Animation.prototype.addFrame = function(path, ms, loadCallback) {
-	var frame = new _Frame(path, ms, loadCallback);
+Animation.prototype.addFrame = function(path, ms, completedCallback, loadCallback) {
+	var frame = new _Frame(path, ms, completedCallback, loadCallback);
 
 	this._frames.push(frame);
 	this.numFrames++;
@@ -668,13 +675,21 @@ Update this animation based on a 'dt' param interval.
 Animation.prototype.update = function(dt) {
 	this.currTime += dt;
 
-	//only update if there are 2 or more frames in this animation
-	if (this.numFrames > 1) {
-		
+	//only update if this frame is defined
+	if (this._frames[this.currIndex]) {
+
 		//update index if we're done with this frame
 		if (this.currTime >= this._frames[this.currIndex].frameTime) {
 			this.currTime %= this._frames[this.currIndex].frameTime;
+
+			//this frame is over, if this frame has a callback, call it.
+			if (this._frames[this.currIndex].completedCallback != null) {
+				//console.log('calling frame completed callback');
+				this._frames[this.currIndex].completedCallback();
+			}
+
 			this.currIndex++;
+
 		}
 
 		//if the animation is done...
@@ -690,7 +705,6 @@ Animation.prototype.update = function(dt) {
 			//regardless, reset vars
 			this.reset();
 		}
-
 	}
 };
 
@@ -717,8 +731,52 @@ Animation.prototype.reset = function() {
 //export the Animation constructor
 module.exports = Animation;
 
-
 },{}],7:[function(require,module,exports){
+var Entity = require('./entity');
+
+//
+//
+// A special type of Entity that gets drawn in object space
+//
+//
+var Attack = function() {
+
+  //inherit from Entity
+  Entity.call(this);
+
+  //the realX and Y of the entity associated with this attack
+  //the pos.x and y are calculated from realX/Y
+  this.realX = 0;
+  this.realY = 0;
+  this.objX = 0;
+  this.objY = 0;
+}
+
+//inheritance
+Attack.prototype = Object.create(Entity.prototype);
+
+//
+//
+// Update this attack taking into account the associated entity's realX/Y pos.
+//
+//
+Attack.prototype.update = function(dt, nrX, nrY) {
+
+  //update the real x and y
+  this.realX = nrX;
+  this.realY = nrY;
+
+  this.pos.x = this.realX + this.objX;
+  this.pos.y = this.realY + this.objY;
+
+  //update internal positions
+  this.updateRungeKutta(dt);
+}
+
+//export the constructor
+module.exports = Attack;
+
+},{"./entity":9}],8:[function(require,module,exports){
 var Entity = require('./entity'),
     AABB = require('../core/boundingbox');
 
@@ -728,8 +786,6 @@ var Enemy = function() {
   //inheritance
   Entity.call(this);
 
-  //boundig boxes
-  this.aabbs = [];
 }
 
 //inheritance
@@ -754,17 +810,11 @@ Update this enemy's position and bounding boxes
 Enemy.prototype.update = function(dt) {
 
   this.updateRungeKutta(dt);
-
-  for (var i = 0; i < this.aabbs.length; i++) {
-
-    this.aabbs[i].updatePos(this.pos.x, this.pos.y);
-
-  }
 }
 
 module.exports = Enemy;
 
-},{"../core/boundingbox":1,"./entity":8}],8:[function(require,module,exports){
+},{"../core/boundingbox":1,"./entity":9}],9:[function(require,module,exports){
 /******************************************************************************
 
 Describes any interactable object in the game. Can't decide yet if everything
@@ -779,7 +829,8 @@ override the drawing and physics update functions.
 
 ******************************************************************************/
 var vect = require("../utilities/vector2D"),
-	Animation = require('./animation');
+	  Animation = require('./animation'),
+		AABB = require('../core/boundingbox');
 
 var Entity = function Entity() {
 	this.pos = vect.create(0,0);
@@ -801,6 +852,7 @@ var Entity = function Entity() {
 		scaledWidth  : 0.5,
 		scaledHeight : 0.5
 	};
+	this.aabbs = [];
 }
 
 /******************************************************************************
@@ -809,9 +861,9 @@ Adds a frame to the specified animation given by name. If the animation name
 doesn't yet exist for this entity, one is automatically created.
 
 ******************************************************************************/
-Entity.prototype.addFrame = function(animation, path, ms, loadCallback) {
+Entity.prototype.addFrame = function(animation, path, ms, completedCallback) {
 	var anim = this.animations[animation] || new Animation();
-	anim.addFrame(path, ms, loadCallback);
+	anim.addFrame(path, ms, completedCallback);
 	this.animations[animation] = anim;
 
 	//console.log(this.animations);
@@ -918,16 +970,14 @@ Entity.prototype.updateRungeKutta = function(dt, stepsize) {
 	this.vel.y += this.accel.y * dt;
 
 	//update animations
-	if (this.animations[this.direction] != 'undefined') {
+	if (this.animations[this.direction]) {
 		this.animations[this.direction].update(dt)
 	}
 
 	//updating bounding boxes?
-	/**
-		Need to have a way to allow for different boxes depending on entity.
-		Entity specific?
-		Implement in player / enemy class?
-	**/
+	for (var i = 0; i < this.aabbs.length; i++) {
+		this.aabbs[i].updatePos(this.pos.x, this.pos.y);
+	}
 };
 
 /******************************************************************************
@@ -936,7 +986,8 @@ Draw this entity to the screen with the given context
 
 ******************************************************************************/
 Entity.prototype.draw = function(ctx) {
-	var img = this.animations[this.direction].getCurrImg();
+	var anim = this.animations[this.direction],
+		img = (anim) ? anim.getCurrImg() : null;
 
 	if (img != null) {
 		ctx.drawImage(
@@ -952,7 +1003,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../utilities/vector2D":12,"./animation":6}],9:[function(require,module,exports){
+},{"../core/boundingbox":1,"../utilities/vector2D":13,"./animation":6}],10:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -961,11 +1012,14 @@ var Player = function Player() {
 	//Player inherits from Entity
 	Entity.call(this);
 
-	//AABBs for the player
-	this.aabbs = [];
-
 	//state for player; idle or attacking
 	this.state = 'idle';
+
+	//attack list for this player
+	this.attacks = {};
+
+	//curr attacks to update and detect collisions
+	this.currAttacks = [];
 }
 
 //inheritance
@@ -979,7 +1033,18 @@ Add a boundng box in the player object space; (0,0) is top left of player
 Player.prototype.addAABB = function(x, y, width, height) {
 	var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
 
+	//from the entity prototype chain
 	this.aabbs.push(box);
+}
+
+/******************************************************************************
+
+Associates an attack with this player and sets starting location in player
+space
+
+******************************************************************************/
+Player.prototype.addAttack = function(attackName, attack) {
+	this.attacks[attackName] = attack;
 }
 
 /******************************************************************************
@@ -989,10 +1054,13 @@ Update the player
 ******************************************************************************/
 Player.prototype.update = function(dt) {
 
+	//update player pos based on vel and forces
 	this.updateRungeKutta(dt);
 
-	for (var i = 0; i < this.aabbs.length; i++) {
-		this.aabbs[i].updatePos(this.pos.x, this.pos.y);
+	//update currAttack pos based on player pos
+	for (var i = 0; i < this.currAttacks.length; i++) {
+		this.currAttacks[i].update(dt, this.pos.x, this.pos.y);
+		//this.currAttacks[i].updateRungeKutta(dt);
 	}
 
 }
@@ -1018,11 +1086,76 @@ Player.prototype.pollInput = function(inputMap, inputCollection) {
 	}
 };
 
+/******************************************************************************
+
+Add the given pre-defined attack to the list of current attacks to render and
+update.
+
+******************************************************************************/
+Player.prototype.attack = function(attackString) {
+
+	var curr = this.attacks[attackString];
+
+	if (curr) {
+		this.currAttacks.push(curr);
+	}
+	else {
+		console.log('undefined attackString: ', attackString);
+	}
+
+};
+
+/******************************************************************************
+
+Remove the given attack from the current list of attacks to render and update
+
+******************************************************************************/
+Player.prototype.removeAttack = function(attackString) {
+	var curr = this.attacks[attackString];
+
+	console.log('removing attack: ', attackString);
+
+	if (curr) {
+		//this.currAttacks.split(curr);
+		//console.log('should remove attack');
+	}
+	else {
+		console.log('undefined attackString: ', attackString);
+	}
+}
+
+/******************************************************************************
+
+Override the Entity draw function to account for player attacks.
+
+******************************************************************************/
+Player.prototype.draw = function(ctx) {
+
+	var img = this.animations[this.direction].getCurrImg();
+
+	if (img != null) {
+		ctx.drawImage(
+			img,
+			this.pos.x,
+			this.pos.y,
+			this.animations[this.direction].getCurrImg().width * this.drawOptions.scaledWidth,
+			this.animations[this.direction].getCurrImg().height * this.drawOptions.scaledHeight
+		);
+	}
+
+	//draw the current attacks.
+	for (var i = 0; i < this.currAttacks.length; i++) {
+		if (this.currAttacks[i]) {
+			this.currAttacks[i].direction = this.direction;
+			this.currAttacks[i].draw(ctx);
+		}
+	}
+}
 
 //export player constructor
 module.exports = Player;
 
-},{"../core/boundingbox.js":1,"./entity":8}],10:[function(require,module,exports){
+},{"../core/boundingbox.js":1,"./entity":9}],11:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -1041,7 +1174,6 @@ var canvas = document.getElementById('playground'),
 
 ******************************************************************************/
 Entity = require("./entity/entity"),
-//Player = require("./entity/player"),
 GameState = require("./core/state"),
 Enemy = require('./entity/enemy'),
 
@@ -1059,7 +1191,6 @@ Resource = require('./utilities/resource'),
 	Main Instance Vars
 
 ******************************************************************************/
-//player = new Player(),
 player,
 title = new GameState('title'),
 game = new GameState('game'),
@@ -1087,8 +1218,19 @@ PLAYER_INPUT_MAP  = {
 ******************************************************************************/
 function init() {
 
+	//FULL SCREEN PARTY HORSE
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+
+	// canvas dimensions
+	//var width = 1000;
+	//var height = 500;
+
+	// retina
+	var dpr = window.devicePixelRatio || 1;
+	//canvas.width = width*dpr;
+	//canvas.height = height*dpr;
+	//canvas.getContext("2d").scale(dpr, dpr);
 
 	//initialize input manager
 	Input.init();
@@ -1107,11 +1249,11 @@ function init() {
 
 
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
 		jagwar.pos.x = canvas.width - 50;
 		jagwar.pos.y = 45 + (100 * i);
-		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
@@ -1119,28 +1261,16 @@ function init() {
 
 	for (var j = 0; j < 5; j++) {
 		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
+		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
 		jagwar.pos.x = canvas.width + 150;
 		jagwar.pos.y = 20 + (100 * j);
-		jagwar.accel.x = -0.00001 + (Math.random() * -0.00001);
+		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
 
 		enemies.push(jagwar);
 
 	}
-
-	/*{
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300, function(ev) { console.log(ev) });
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300, function(ev) { console.log(ev) });
-		jagwar.pos.x = canvas.width / 2;
-		jagwar.pos.y = canvas.height / 2
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-
-	}*/
 
 	game.addEnemyToState(enemies);
 
@@ -1229,6 +1359,9 @@ function init() {
 			player.direction = 'attack-right';
 			player.dirLock = true;
 			player.state = 'attacking';
+			player.attack('basic');
+
+
 		}
 	);
 
@@ -1295,7 +1428,7 @@ function update(timestamp) {
 
 				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
-					//causes a slight frame skip
+					//causes a slight frame skip -- think of way to remove without frameskip
 					//currState.enemies.splice(i,1);
 
 					currState.enemies[i] = null;
@@ -1317,9 +1450,11 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/enemy":7,"./entity/entity":8,"./utilities/resource":11}],11:[function(require,module,exports){
+},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/enemy":8,"./entity/entity":9,"./utilities/resource":12}],12:[function(require,module,exports){
 var Player = require('../entity/player'),
-    AABB = require('../core/boundingbox');
+    AABB = require('../core/boundingbox'),
+    Entity = require('../entity/entity'),
+    Attack = require('../entity/attack');
 
 /******************************************************************************
 
@@ -1350,50 +1485,44 @@ Loads and returns a player object based on the included definitions
 ******************************************************************************/
 exports.loadPlayerDefinition = function() {
 
-  var player = new Player();
+  var player = new Player(),
+      basicAttack = new Attack();
 
   //set up player
   player.pos.y = 100;
   player.pos.x = 100;
 
-  player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000, function(ev) {
-    console.log(ev);
-  });
-  player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000, function(ev) {
-    console.log(ev);
-  });
+  player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000);
+  player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000);
 
-  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-start-right.png", 250, function(ev) {
-    console.log(ev);
-  });
-  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-middle-right.png", 250, function(ev) {
-    console.log(ev);
-  });
-  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400, function(ev) {
-    console.log(ev);
-  });
-
-  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-start-left.png", 250, function(ev) {
-    console.log(ev);
-  });
-  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-middle-left.png", 250, function(ev) {
-    console.log(ev);
-  });
-  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400, function(ev) {
-    console.log(ev);
-  });
+  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400);
+  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400);
 
   //walk animations
-  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250, function(ev) { console.log(ev); });
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250, function(ev) { console.log(ev); });
+  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250);
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
+  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+
+  //add basic attack to list of known attacks.
+  //this should be player.addAttack(attackName, attackObj, x, y); x/y in player space
+  //player.attacks['basic'] = basicAttack;
+  basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
+  basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
+
+  basicAttack.realX = player.pos.x;
+  basicAttack.realY = player.pos.y;
+  basicAttack.objX = 150;
+  basicAttack.objY = 20;
+
+  player.addAttack('basic', basicAttack);
 
   player.addAnimationCompletedCallback('attack-right', function() {
     console.log('attack-right completed');
     //player.dirLock = false;
     player.setDirection('right');
     player.state = 'idle';
+    //player.removeAttack('basic');
   });
 
   player.addAnimationCompletedCallback('attack-left', function() {
@@ -1402,6 +1531,7 @@ exports.loadPlayerDefinition = function() {
     //player.direction = 'left';
     player.setDirection('right');
     player.state = 'idle';
+    player.removeAttack('basic');
   });
 
   player.setAnimationLoop('attack-left', false);
@@ -1409,11 +1539,12 @@ exports.loadPlayerDefinition = function() {
 
   player.direction = "right";
 
+
   player.addAABB(
     0,   //x coord of bounding box in object space
     0,   //y coord of bounding box in object space
-    100, //width of bounding box
-    100  //height of bounding box
+    126.5, //width of bounding box
+    125 //height of bounding box
   );
 
   return player;
@@ -1425,12 +1556,12 @@ exports.loadPlayerDefinition = function() {
 Loads and returns a single basic enemy entity
 
 ******************************************************************************/
-exports.loadEnemyDefinition = function() {
+exports.loadEnemyDefinition = function(numEnemies) {
 
 
 }
 
-},{"../core/boundingbox":1,"../entity/player":9}],12:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/attack":7,"../entity/entity":9,"../entity/player":10}],13:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -1530,4 +1661,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[10])
+},{}]},{},[11])

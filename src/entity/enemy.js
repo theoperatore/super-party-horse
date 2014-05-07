@@ -7,8 +7,6 @@ var Enemy = function() {
   //inheritance
   Entity.call(this);
 
-  //boundig boxes
-  this.aabbs = [];
 }
 
 //inheritance
@@ -33,12 +31,6 @@ Update this enemy's position and bounding boxes
 Enemy.prototype.update = function(dt) {
 
   this.updateRungeKutta(dt);
-
-  for (var i = 0; i < this.aabbs.length; i++) {
-
-    this.aabbs[i].updatePos(this.pos.x, this.pos.y);
-
-  }
 }
 
 module.exports = Enemy;

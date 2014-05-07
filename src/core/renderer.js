@@ -88,10 +88,10 @@ exports.draw = function(gameState) {
 							e.draw(rend.ctx);
 
 							//draw aabb
-							rend.ctx.strokeRect(e.aabbs[0].minBoundX,
-																	e.aabbs[0].minBoundY,
-																	e.aabbs[0].width,
-																	e.aabbs[0].height);
+							//rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+							//					e.aabbs[0].minBoundY,
+							//					e.aabbs[0].width,
+							//					e.aabbs[0].height);
 					}
 				}
 
@@ -104,10 +104,10 @@ exports.draw = function(gameState) {
 				renderState.player.draw(rend.ctx);
 
 				//draw aabb
-				rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
-														renderState.player.aabbs[0].minBoundY,
-														renderState.player.aabbs[0].width,
-														renderState.player.aabbs[0].height);
+				//rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
+				//					renderState.player.aabbs[0].minBoundY,
+				//					renderState.player.aabbs[0].width,
+				//					renderState.player.aabbs[0].height);
 			}
 
 			//draw foreground

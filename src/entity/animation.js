@@ -3,23 +3,30 @@
 Private inner 'class' that represents one frame in an animation
 
 ******************************************************************************/
-var _Frame = function _Frame(path, ms, callback) {
+var _Frame = function _Frame(path, ms, completeCallback) {
 	this.img = new Image();
 	this.frameTime = ms;
 
-	callback = (typeof callback === 'function') ? callback : function() {};
+	//loadCallback = (typeof loadCallback === 'function') ? loadCallback : function() {};
 
-	this.img.addEventListener('load', callback( {
+	/*this.img.addEventListener('load', loadCallback( {
 		message : path + " -- loaded",
 		frame   : this
 	}));
+	*/
+
+	this.img.addEventListener('load', function(ev) {
+		console.log('loaded:', path, ' -- frame: ', this);
+	});
 
 	this.img.src = path;
+
+	this.completedCallback = (typeof completeCallback === 'function') ? completeCallback : null;
 }
 
 /******************************************************************************
 
-Defines an animation as an ordered array of images to be shown based on 
+Defines an animation as an ordered array of images to be shown based on
 certain conditions and after a certain period of time.
 
 ******************************************************************************/
@@ -34,12 +41,12 @@ var Animation = function Animation() {
 
 /******************************************************************************
 
-Add a frame to this animation. This function accepts only strings paths to 
+Add a frame to this animation. This function accepts only strings paths to
 images.
 
 ******************************************************************************/
-Animation.prototype.addFrame = function(path, ms, loadCallback) {
-	var frame = new _Frame(path, ms, loadCallback);
+Animation.prototype.addFrame = function(path, ms, completedCallback, loadCallback) {
+	var frame = new _Frame(path, ms, completedCallback, loadCallback);
 
 	this._frames.push(frame);
 	this.numFrames++;
@@ -62,13 +69,21 @@ Update this animation based on a 'dt' param interval.
 Animation.prototype.update = function(dt) {
 	this.currTime += dt;
 
-	//only update if there are 2 or more frames in this animation
-	if (this.numFrames > 1) {
-		
+	//only update if this frame is defined
+	if (this._frames[this.currIndex]) {
+
 		//update index if we're done with this frame
 		if (this.currTime >= this._frames[this.currIndex].frameTime) {
 			this.currTime %= this._frames[this.currIndex].frameTime;
+
+			//this frame is over, if this frame has a callback, call it.
+			if (this._frames[this.currIndex].completedCallback != null) {
+				//console.log('calling frame completed callback');
+				this._frames[this.currIndex].completedCallback();
+			}
+
 			this.currIndex++;
+
 		}
 
 		//if the animation is done...
@@ -84,7 +99,6 @@ Animation.prototype.update = function(dt) {
 			//regardless, reset vars
 			this.reset();
 		}
-
 	}
 };
 
@@ -110,4 +124,3 @@ Animation.prototype.reset = function() {
 
 //export the Animation constructor
 module.exports = Animation;
-
