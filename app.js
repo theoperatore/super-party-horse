@@ -922,6 +922,18 @@ Entity.prototype.setDirection = function(dir) {
 
 /******************************************************************************
 
+Stops this entity from moving by setting accel and vel to 0
+
+******************************************************************************/
+Entity.prototype.stop = function() {
+	this.accel.x = 0;
+	this.accel.y = 0;
+	this.vel.x = 0;
+	this.vel.y = 0;
+}
+
+/******************************************************************************
+
 Seems like acceleration is acting like veloctiy....
 
 ******************************************************************************/
@@ -1411,7 +1423,7 @@ function init() {
 	);
 
 	//add basic text for temporary title
-	title.plainText = '<! Super Party Horse !> Press Enter to play!';
+	title.plainText = '<! Super Party Horse !> Press Enter to Party!';
 
 	//set up main game state
 	game.addPlayerToState(player);
@@ -1428,13 +1440,18 @@ function init() {
 	currState = title;
 }
 
+//update the game. system inputs are always active, player inputs need to be
+//manually listened
 function update(timestamp) {
+
 	//set up next update loop
 	requestAnimationFrame(update);
 
 	now = timestamp;
 	dt = now - prev;
 	prev = now;
+
+	//timer updates
 
 	//check for player input and update player pos
 	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
@@ -1443,14 +1460,20 @@ function update(timestamp) {
 	//if there are enemies to update...
 	if (currState.enemies.length != 0) {
 
+		//call collisionDetector; returns collision pairs in queue
+
+		//call collisionResolver(collisionPairsQueue);
+
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
 
 			if (currState.enemies[i]) {
 
+				//updates pos and AI
 				currState.enemies[i].update(dt);
 
 				//if the player collides with enemy
+				//only check if the enemy is near the player?
 				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
 					//player hurt!
@@ -1463,18 +1486,19 @@ function update(timestamp) {
 						if (player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
 							//remove enemy from array
-							currState.enemies.splice(i,1);
+							//currState.enemies.splice(i,1);
+							currState.enemies[i].stop();
+
 							break;
 
 						}
 
+				}//end for player attacks
 
-				}
+			}//end if enemy exists
+		}//end enemy update/collision loop
 
-			}
-		}
-
-	}
+	}//end if enemies.length != 0
 
 	//draw the game
 	Renderer.draw();

@@ -97,6 +97,18 @@ Entity.prototype.setDirection = function(dir) {
 
 /******************************************************************************
 
+Stops this entity from moving by setting accel and vel to 0
+
+******************************************************************************/
+Entity.prototype.stop = function() {
+	this.accel.x = 0;
+	this.accel.y = 0;
+	this.vel.x = 0;
+	this.vel.y = 0;
+}
+
+/******************************************************************************
+
 Seems like acceleration is acting like veloctiy....
 
 ******************************************************************************/
