@@ -1,0 +1,29 @@
+### Future Expansion
+
+- Main Loop Refinement
+	- init
+	- update
+		- game state
+		- inputs
+		- player
+		- enemies
+	- render
+- Game Flow
+	- Start -> Levels -> End
+	- Win/Lose Conditions
+	- AI
+- HUD
+- Attack Animations
+	- rendering / collisions / timing
+- Collision Engine
+- Upgrades
+	- pre-defined path || loose path
+- Menus
+- Story Engine
+- Assets Needed
+	- Reserved Animations
+		- Death
+		- Create
+- Deployment
+	- Node.js
+	- Browser

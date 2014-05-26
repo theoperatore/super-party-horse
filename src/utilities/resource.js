@@ -72,6 +72,7 @@ exports.loadPlayerDefinition = function() {
     player.removeAttack('basic');
   });
 
+  //not used anymore -- direction lock on right
   player.addAnimationCompletedCallback('attack-left', function() {
     console.log('attack-left completed');
     //player.dirLock = false;
@@ -100,7 +101,7 @@ exports.loadPlayerDefinition = function() {
 
 /******************************************************************************
 
-Loads and returns a single basic enemy entity
+Loads and returns an array of enemies
 
 ******************************************************************************/
 exports.loadEnemyDefinition = function(numEnemies) {

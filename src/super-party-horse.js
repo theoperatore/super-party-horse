@@ -262,16 +262,16 @@ function update(timestamp) {
 
 	//timer updates
 
-	//check for player input and update player pos
-	player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
-	player.update(dt);
+	//check player if player exists in current game state
+	if (currState.player) {
+
+			//check for player input and update player pos
+			currState.player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
+			currState.player.update(dt);
+	}
 
 	//if there are enemies to update...
 	if (currState.enemies.length != 0) {
-
-		//call collisionDetector; returns collision pairs in queue
-
-		//call collisionResolver(collisionPairsQueue);
 
 		//loop through and update them
 		for (var i = 0; i < currState.enemies.length; i++) {
@@ -283,20 +283,20 @@ function update(timestamp) {
 
 				//if the player collides with enemy
 				//only check if the enemy is near the player?
-				if (player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
+				if (currState.player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
 					//player hurt!
 
 				}
 
 				//if player attacks collide with enemy
-				for (var a = 0; a < player.currAttacks.length; a++) {
+				for (var a = 0; a < currState.player.currAttacks.length; a++) {
 
-						if (player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
+						if (currState.player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
 
 							//remove enemy from array
-							//currState.enemies.splice(i,1);
-							currState.enemies[i].stop();
+							currState.enemies.splice(i,1);
+							//currState.enemies[i].stop();
 
 							break;
 
