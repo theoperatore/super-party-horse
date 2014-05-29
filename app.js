@@ -65,7 +65,96 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":13}],2:[function(require,module,exports){
+},{"../utilities/vector2D":15}],2:[function(require,module,exports){
+var Vector2D = require('../../utilities/vector2D');
+
+//
+// A basic control that is used by a menu to perform an action callback when
+// selected
+//
+var Control = function(name, label) {
+
+	//basic properties
+	this.name = name;
+	this.engageCallback = null;
+
+	//control style
+	this.showBorder = false;
+	this.backgroundImg = null;
+	this.backgroundFill = '#333';
+	this.borderColor = '#333';
+	this.borderWidth = 1;
+	this.borderRadius = 5;
+
+	//label
+	this.label = label || 'Control Default';
+	this.labelFont = 'Helvetica,sans-serif';
+	this.labelSize = '24px';
+	//this.labelWidth = this.ctx.measureText(this.label).width;
+	this.labelPaddingX = 10;
+
+	//dimensions
+	this.height = 48;
+	this.width  = 100;
+
+	//movement
+	this.pos = Vector2D.create(0,0);
+	this.vel = Vector2D.create(0,0);
+	this.acc = Vector2D.create(0,0);
+
+}
+
+//
+//engage the callback for this control
+//
+Control.prototype.engage = function() {
+	if (typeof this.engageCallback === 'function') {
+		this.engageCallback();
+	}
+	else {
+		console.error('Unable to engage control function on control: ', this.name);
+	}
+}
+
+//
+// Static draw of this control
+//
+Control.prototype.draw = function(ctx) {
+
+	ctx.beginPath();
+
+	//draw the background image if exists
+	if (this.backgroundImg) {
+		ctx.drawImage(this.backgroundImg, this.pos.x, this.pos.y, this.width, this.height);
+	}
+
+	ctx.fillStyle = this.backgroundFill;
+	ctx.strokeStyle = this.borderColor;
+	ctx.font = this.labelSize + " " + this.labelFont;
+
+	//draw the label
+	ctx.textBaseline = 'middle';
+	ctx.fillText(this.label, this.pos.x + this.labelPaddingX, this.pos.y + this.height/2);
+
+	//strokes a rounded rectangle
+	if (this.showBorder) {
+			ctx.moveTo(this.pos.x, this.pos.y + this.borderRadius);
+			ctx.lineTo(this.pos.x, this.pos.y + this.height - this.borderRadius);
+			ctx.quadraticCurveTo(this.pos.x, this.pos.y + this.height, this.pos.x + this.borderRadius, this.pos.y + this.height);
+			ctx.lineTo(this.pos.x + this.width - this.borderRadius, this.pos.y + this.height);
+			ctx.quadraticCurveTo(this.pos.x + this.width, this.pos.y + this.height, this.pos.x + this.width, this.pos.y + this.height - this.borderRadius);
+			ctx.lineTo(this.pos.x + this.width, this.pos.y + this.borderRadius);
+			ctx.quadraticCurveTo(this.pos.x + this.width, this.pos.y, this.pos.x + this.width - this.borderRadius, this.pos.y);
+			ctx.lineTo(this.pos.x + this.borderRadius, this.pos.y);
+			ctx.quadraticCurveTo(this.pos.x, this.pos.y, this.pos.x, this.pos.y + this.borderRadius);
+			ctx.stroke();
+	}
+}
+
+//export constructor
+module.exports = Control;
+
+},{"../../utilities/vector2D":15}],3:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -130,7 +219,7 @@ exports.batchLoad = function(paths, callback) {
 		tmpImg.src = paths[i];
 	}
 }
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /******************************************************************************
 
 Handles setting up game inputs and eventListeners for any game input.
@@ -150,11 +239,12 @@ var Input = function Input(name, keyCode, callback, keyup) {
 
 Structure to hold Input objects. Index is the keycode associated with the
 keyboard event being processed, resulting data is the Input object holding the
-function to call for either keydown or keyup 
+function to call for either keydown or keyup
 
 ******************************************************************************/
 var inputs = [],
-	inputMap = {};
+	inputMap = {},
+	currentState = null;
 
 
 /******************************************************************************
@@ -166,7 +256,7 @@ accordingly.
 exports.init = function() {
 
 	document.addEventListener('keydown', function(ev) {
-		
+
 		ev.preventDefault();
 		ev.stopPropagation();
 
@@ -176,7 +266,7 @@ exports.init = function() {
 
 		if (tmpInput !== 'undefined' && tmpInput.isSystemInput) {
 			tmpInput.keydownCallback();
-		} 
+		}
 
 	});
 
@@ -188,13 +278,13 @@ exports.init = function() {
 
 		tmpInput.isPressed = false;
 
-		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup');
+		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup',tmpInput);
 	});
 }
 
 /******************************************************************************
 
-Handles adding a new game input. 
+Handles adding a new game input.
 
 WARNING: This function overrides whatever the previously associated
 keyCode - Callback pairing...
@@ -272,7 +362,22 @@ exports.useState = function(newState) {
 		inputs[tmpInput.keyCode] = tmpInput;
 		inputMap[tmpInput.name] = tmpInput.keyCode;
 	}
+
+	currentState = newState;
+
+	//returns the new input state
+	return newState;
 }
+
+/******************************************************************************
+
+Returns the current state the input manager is using
+
+******************************************************************************/
+exports.getState = function() {
+	return currentState;
+}
+
 
 /******************************************************************************
 
@@ -285,7 +390,41 @@ exports.createInput = function(name, keyCode, keydownCallback, keyupCallback) {
 
 	return new Input(name, keyCode, keydownCallback, keyupCallback);
 }
-},{}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
+var GameState = require('./state'),
+		Control   = require('./controls/control'),
+		Vector2D  = require('../utilities/vector2D');
+
+//
+// A window that extends a state and contains controls
+//
+var Menu = function(name) {
+
+	//Inherit game state
+	GameState.call(this, name);
+
+	//properties
+	this.pos = Vector2D.create(0,0);
+	this.vel = Vector2D.create(0,0);
+	this.acc = Vector2D.create(0,0);
+
+	//indexed by control name
+	this.controls = {};
+
+	//the current state of the menu
+	this.isOpen = false;
+	this.show = false;
+}
+
+//inheritance
+Menu.prototype = Object.create(GameState.prototype);
+
+
+//export constructor
+module.exports = Menu;
+
+},{"../utilities/vector2D":15,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -328,6 +467,7 @@ exports.useState = function(newState) {
 		rend.state.player = newState.player;
 	}
 }
+
 
 /******************************************************************************
 
@@ -416,8 +556,8 @@ exports.draw = function(gameState) {
 			}
 
 			//draw any optional rendering specified by the designer
-			if (renderState.optionalRenderingFucntion != null) {
-				renderState.ooptionalRenderingFunction();
+			if (renderState.optionalRenderingFunction != null) {
+				renderState.optionalRenderingFunction();
 			}
 		}
 		else {
@@ -430,7 +570,7 @@ exports.draw = function(gameState) {
 
 }
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var inputManager = require('./input-manager'),
     imageManager = require('./image');
 
@@ -603,7 +743,7 @@ State.prototype.addOptionalRendering = function(callback) {
 module.exports = State;
 
 
-},{"./image":2,"./input-manager":3}],6:[function(require,module,exports){
+},{"./image":3,"./input-manager":4}],8:[function(require,module,exports){
 /******************************************************************************
 
 Private inner 'class' that represents one frame in an animation
@@ -731,7 +871,7 @@ Animation.prototype.reset = function() {
 //export the Animation constructor
 module.exports = Animation;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Entity = require('./entity'),
     AABB = require('../core/boundingbox');
 
@@ -784,7 +924,7 @@ Attack.prototype.update = function(dt, nrX, nrY) {
 //export the constructor
 module.exports = Attack;
 
-},{"../core/boundingbox":1,"./entity":9}],8:[function(require,module,exports){
+},{"../core/boundingbox":1,"./entity":11}],10:[function(require,module,exports){
 var Entity = require('./entity'),
     AABB = require('../core/boundingbox');
 
@@ -822,7 +962,7 @@ Enemy.prototype.update = function(dt) {
 
 module.exports = Enemy;
 
-},{"../core/boundingbox":1,"./entity":9}],9:[function(require,module,exports){
+},{"../core/boundingbox":1,"./entity":11}],11:[function(require,module,exports){
 /******************************************************************************
 
 Describes any interactable object in the game. Can't decide yet if everything
@@ -1023,7 +1163,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../core/boundingbox":1,"../utilities/vector2D":13,"./animation":6}],10:[function(require,module,exports){
+},{"../core/boundingbox":1,"../utilities/vector2D":15,"./animation":8}],12:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -1188,7 +1328,7 @@ Player.prototype.draw = function(ctx) {
 //export player constructor
 module.exports = Player;
 
-},{"../core/boundingbox.js":1,"./entity":9}],11:[function(require,module,exports){
+},{"../core/boundingbox.js":1,"./entity":11}],13:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -1196,8 +1336,8 @@ module.exports = Player;
 ******************************************************************************/
 var canvas = document.getElementById('playground'),
 	ctx = canvas.getContext("2d"),
-	now = performance.now(),
-	prev = performance.now(),
+	now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
 	dt = 0,
 	currState,
 
@@ -1252,18 +1392,33 @@ PLAYER_INPUT_MAP  = {
 function init() {
 
 	//FULL SCREEN PARTY HORSE
-	canvas.width = document.body.clientWidth;
-	canvas.height = document.body.clientHeight;
+	//canvas.width = document.body.clientWidth;
+	//canvas.height = document.body.clientHeight;
 
 	// canvas dimensions
-	//var width = 1000;
-	//var height = 500;
+	//var width = 500;
+	//var height = 250;
+	var width  = document.body.clientWidth;
+	var height = document.body.clientHeight;
 
-	// retina
-	var dpr = window.devicePixelRatio || 1;
-	//canvas.width = width*dpr;
-	//canvas.height = height*dpr;
-	//canvas.getContext("2d").scale(dpr, dpr);
+	//
+	// HiDef Canvas
+	//
+	var dpr = window.devicePixelRatio || 1,
+			bsr = ctx.webkitBackingStorePixelRatio ||
+						ctx.mozBackingStorePixelRatio ||
+						ctx.msBackingStorePixelRatio ||
+						ctx.oBackingStorePixelRatio ||
+						ctx.backingStorePixelRatio || 1,
+			ratio = dpr / bsr;
+
+	if (dpr !== bsr) {
+			canvas.width = width * ratio;
+			canvas.height = height * ratio;
+			canvas.style.width  = width + 'px';
+			canvas.style.height = height + 'px';
+			canvas.getContext("2d").scale(ratio,ratio);
+	}
 
 	//initialize input manager
 	Input.init();
@@ -1422,8 +1577,26 @@ function init() {
 		}
 	);
 
+/******************************************************************************
+Testing Menu and controls for Start Menu
+******************************************************************************/
+	var Control = require('./core/controls/control'),
+			test = new Control('start','Start Game!'),
+			Menu = require('./core/menu'),
+			testMenu = new Menu('testMenu');
+
+	console.log(testMenu);
 	//add basic text for temporary title
-	title.plainText = '<! Super Party Horse !> Press Enter to Party!';
+	//title.plainText = '<! Super Party Horse !> Press Enter to Party!';
+	title.optionalRenderingFunction = function() {
+
+		test.pos.x = (width / 2) - (test.width / 2);
+		test.pos.y = height / 2;
+		test.showBorder = false;
+		test.draw(ctx);
+	}
+/******************************************************************************
+******************************************************************************/
 
 	//set up main game state
 	game.addPlayerToState(player);
@@ -1431,13 +1604,11 @@ function init() {
 	game.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, canvas.width, canvas.height, title);
+	Renderer.init(ctx, width, height, title);
 
-	//set title state
-	Input.useState(title);
-
-	//set initial currState
-	currState = title;
+	//set title state TODO is it non-standard to have the method return the
+	//newly set state?
+	currState = Input.useState(title);
 }
 
 //update the game. system inputs are always active, player inputs need to be
@@ -1510,7 +1681,7 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":3,"./core/renderer":4,"./core/state":5,"./entity/enemy":8,"./entity/entity":9,"./utilities/resource":12}],12:[function(require,module,exports){
+},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":14}],14:[function(require,module,exports){
 var Player = require('../entity/player'),
     AABB = require('../core/boundingbox'),
     Entity = require('../entity/entity'),
@@ -1622,7 +1793,7 @@ exports.loadEnemyDefinition = function(numEnemies) {
 
 }
 
-},{"../core/boundingbox":1,"../entity/attack":7,"../entity/entity":9,"../entity/player":10}],13:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],15:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -1650,8 +1821,8 @@ To summarize: using vect will always return a value or a new vector
 ******************************************************************************/
 
 var Vector2D = function(x,y) {
-	this.x = x;
-	this.y = y;
+	this.x = x || 0;
+	this.y = y || 0;
 }
 
 Vector2D.prototype.add = function(v2) {
@@ -1722,4 +1893,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[11])
+},{}]},{},[13])

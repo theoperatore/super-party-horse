@@ -41,6 +41,7 @@ exports.useState = function(newState) {
 	}
 }
 
+
 /******************************************************************************
 
 Draw all set up objects to the screen
@@ -128,8 +129,8 @@ exports.draw = function(gameState) {
 			}
 
 			//draw any optional rendering specified by the designer
-			if (renderState.optionalRenderingFucntion != null) {
-				renderState.ooptionalRenderingFunction();
+			if (renderState.optionalRenderingFunction != null) {
+				renderState.optionalRenderingFunction(rend.ctx);
 			}
 		}
 		else {

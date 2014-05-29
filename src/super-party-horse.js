@@ -5,8 +5,8 @@
 ******************************************************************************/
 var canvas = document.getElementById('playground'),
 	ctx = canvas.getContext("2d"),
-	now = performance.now(),
-	prev = performance.now(),
+	now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
 	dt = 0,
 	currState,
 
@@ -61,18 +61,33 @@ PLAYER_INPUT_MAP  = {
 function init() {
 
 	//FULL SCREEN PARTY HORSE
-	canvas.width = document.body.clientWidth;
-	canvas.height = document.body.clientHeight;
+	//canvas.width = document.body.clientWidth;
+	//canvas.height = document.body.clientHeight;
 
 	// canvas dimensions
-	//var width = 1000;
-	//var height = 500;
+	//var width = 500;
+	//var height = 250;
+	var width  = document.body.clientWidth;
+	var height = document.body.clientHeight;
 
-	// retina
-	var dpr = window.devicePixelRatio || 1;
-	//canvas.width = width*dpr;
-	//canvas.height = height*dpr;
-	//canvas.getContext("2d").scale(dpr, dpr);
+	//
+	// HiDef Canvas
+	//
+	var dpr = window.devicePixelRatio || 1,
+			bsr = ctx.webkitBackingStorePixelRatio ||
+						ctx.mozBackingStorePixelRatio ||
+						ctx.msBackingStorePixelRatio ||
+						ctx.oBackingStorePixelRatio ||
+						ctx.backingStorePixelRatio || 1,
+			ratio = dpr / bsr;
+
+	if (dpr !== bsr) {
+			canvas.width = width * ratio;
+			canvas.height = height * ratio;
+			canvas.style.width  = width + 'px';
+			canvas.style.height = height + 'px';
+			canvas.getContext("2d").scale(ratio,ratio);
+	}
 
 	//initialize input manager
 	Input.init();
@@ -231,8 +246,26 @@ function init() {
 		}
 	);
 
+/******************************************************************************
+Testing Menu and controls for Start Menu
+******************************************************************************/
+	var Control = require('./core/controls/control'),
+			test = new Control('start','Start Game!'),
+			Menu = require('./core/menu'),
+			testMenu = new Menu('testMenu');
+
+	console.log(testMenu);
 	//add basic text for temporary title
-	title.plainText = '<! Super Party Horse !> Press Enter to Party!';
+	//title.plainText = '<! Super Party Horse !> Press Enter to Party!';
+	title.optionalRenderingFunction = function() {
+
+		test.pos.x = (width / 2) - (test.width / 2);
+		test.pos.y = height / 2;
+		test.showBorder = false;
+		test.draw(ctx);
+	}
+/******************************************************************************
+******************************************************************************/
 
 	//set up main game state
 	game.addPlayerToState(player);
@@ -240,13 +273,11 @@ function init() {
 	game.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, canvas.width, canvas.height, title);
+	Renderer.init(ctx, width, height, title);
 
-	//set title state
-	Input.useState(title);
-
-	//set initial currState
-	currState = title;
+	//set title state TODO is it non-standard to have the method return the
+	//newly set state?
+	currState = Input.useState(title);
 }
 
 //update the game. system inputs are always active, player inputs need to be

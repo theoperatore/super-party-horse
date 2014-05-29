@@ -11,7 +11,10 @@
 - Game Flow
 	- Start -> Levels -> End
 	- Win/Lose Conditions
+	- Menu involvement
+	- Resource
 	- AI
+		- Behavior system
 - HUD
 - Attack Animations
 	- rendering / collisions / timing

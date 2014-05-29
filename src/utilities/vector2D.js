@@ -25,8 +25,8 @@ To summarize: using vect will always return a value or a new vector
 ******************************************************************************/
 
 var Vector2D = function(x,y) {
-	this.x = x;
-	this.y = y;
+	this.x = x || 0;
+	this.y = y || 0;
 }
 
 Vector2D.prototype.add = function(v2) {

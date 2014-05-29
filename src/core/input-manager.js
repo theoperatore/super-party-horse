@@ -17,11 +17,12 @@ var Input = function Input(name, keyCode, callback, keyup) {
 
 Structure to hold Input objects. Index is the keycode associated with the
 keyboard event being processed, resulting data is the Input object holding the
-function to call for either keydown or keyup 
+function to call for either keydown or keyup
 
 ******************************************************************************/
 var inputs = [],
-	inputMap = {};
+	inputMap = {},
+	currentState = null;
 
 
 /******************************************************************************
@@ -33,7 +34,7 @@ accordingly.
 exports.init = function() {
 
 	document.addEventListener('keydown', function(ev) {
-		
+
 		ev.preventDefault();
 		ev.stopPropagation();
 
@@ -43,7 +44,7 @@ exports.init = function() {
 
 		if (tmpInput !== 'undefined' && tmpInput.isSystemInput) {
 			tmpInput.keydownCallback();
-		} 
+		}
 
 	});
 
@@ -55,13 +56,13 @@ exports.init = function() {
 
 		tmpInput.isPressed = false;
 
-		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup');
+		(tmpInput !== 'undefined') ? tmpInput.keyupCallback() : console.log('undefined keyup',tmpInput);
 	});
 }
 
 /******************************************************************************
 
-Handles adding a new game input. 
+Handles adding a new game input.
 
 WARNING: This function overrides whatever the previously associated
 keyCode - Callback pairing...
@@ -139,7 +140,22 @@ exports.useState = function(newState) {
 		inputs[tmpInput.keyCode] = tmpInput;
 		inputMap[tmpInput.name] = tmpInput.keyCode;
 	}
+
+	currentState = newState;
+
+	//returns the new input state
+	return newState;
 }
+
+/******************************************************************************
+
+Returns the current state the input manager is using
+
+******************************************************************************/
+exports.getState = function() {
+	return currentState;
+}
+
 
 /******************************************************************************
 
