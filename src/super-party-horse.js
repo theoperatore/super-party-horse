@@ -225,12 +225,18 @@ function init() {
 		}
 	);
 
+/******************************************************************************
+Testing Menu and controls for Start Menu
+******************************************************************************/
+	var Menu = require('./core/menu'),
+			testMenu = new Menu('testMenu');
+
 	//input 'start' -- state 'title'
-	title.addSystemInput('start', 13,
+	testMenu.addSystemInput('engage', 13,
 
 		//keydownCallback
 		function() {
-			console.log('start pressed');
+			/*console.log('start pressed');
 
 			//add the input for state game
 			Input.useState(game);
@@ -242,28 +248,38 @@ function init() {
 			currState = game;
 
 			//remove initial start input
-			Input.removeInput('start');
+			Input.removeInput('start');*/
+
+			testMenu.engage();
+
 		}
 	);
 
-/******************************************************************************
-Testing Menu and controls for Start Menu
-******************************************************************************/
-	var Control = require('./core/controls/control'),
-			test = new Control('start','Start Game!'),
-			Menu = require('./core/menu'),
-			testMenu = new Menu('testMenu');
+	testMenu.addSystemInput('up', 87, function(){
+		testMenu.changeSelected('up');
+	});
+	testMenu.addSystemInput('down', 83, function() {
+		testMenu.changeSelected('down');
+	});
 
-	console.log(testMenu);
-	//add basic text for temporary title
-	//title.plainText = '<! Super Party Horse !> Press Enter to Party!';
-	title.optionalRenderingFunction = function() {
+	testMenu.addControl('start', 'Start Game', function() {
+		//test.pos.x = (width / 2) - (test.width / 2);
+		//test.pos.y = height / 2;
+		//test.showBorder = false;
+		//test.draw(ctx);
 
-		test.pos.x = (width / 2) - (test.width / 2);
-		test.pos.y = height / 2;
-		test.showBorder = false;
-		test.draw(ctx);
-	}
+		currState = Input.useState(game);
+		Renderer.useState(game);
+
+	});
+
+	testMenu.addControl('options', 'Options', function() {
+		console.log('Options Selected!');
+	});
+
+	testMenu.addControl('quit', 'Exit Game', function() {
+		console.log('Exit Game Selected!');
+	});
 /******************************************************************************
 ******************************************************************************/
 
@@ -273,11 +289,11 @@ Testing Menu and controls for Start Menu
 	game.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, width, height, title);
+	Renderer.init(ctx, width, height, testMenu);
 
 	//set title state TODO is it non-standard to have the method return the
 	//newly set state?
-	currState = Input.useState(title);
+	currState = Input.useState(testMenu);
 }
 
 //update the game. system inputs are always active, player inputs need to be

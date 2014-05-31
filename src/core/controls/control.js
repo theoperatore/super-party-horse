@@ -30,7 +30,7 @@ var Control = function(name, label) {
 	this.width  = 100;
 
 	//movement
-	this.pos = Vector2D.create(0,0);
+	this.pos = Vector2D.create(100,100);
 	this.vel = Vector2D.create(0,0);
 	this.acc = Vector2D.create(0,0);
 

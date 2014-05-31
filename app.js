@@ -65,7 +65,7 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":15}],2:[function(require,module,exports){
+},{"../utilities/vector2D":16}],2:[function(require,module,exports){
 var Vector2D = require('../../utilities/vector2D');
 
 //
@@ -98,7 +98,7 @@ var Control = function(name, label) {
 	this.width  = 100;
 
 	//movement
-	this.pos = Vector2D.create(0,0);
+	this.pos = Vector2D.create(100,100);
 	this.vel = Vector2D.create(0,0);
 	this.acc = Vector2D.create(0,0);
 
@@ -154,7 +154,7 @@ Control.prototype.draw = function(ctx) {
 //export constructor
 module.exports = Control;
 
-},{"../../utilities/vector2D":15}],3:[function(require,module,exports){
+},{"../../utilities/vector2D":16}],3:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -394,7 +394,9 @@ exports.createInput = function(name, keyCode, keydownCallback, keyupCallback) {
 },{}],5:[function(require,module,exports){
 var GameState = require('./state'),
 		Control   = require('./controls/control'),
-		Vector2D  = require('../utilities/vector2D');
+		Entity    = require('../entity/entity'),
+		Vector2D  = require('../utilities/vector2D'),
+		ObjArray  = require('../utilities/objarray');
 
 //
 // A window that extends a state and contains controls
@@ -404,27 +406,124 @@ var Menu = function(name) {
 	//Inherit game state
 	GameState.call(this, name);
 
-	//properties
+	//movement vectors
 	this.pos = Vector2D.create(0,0);
 	this.vel = Vector2D.create(0,0);
 	this.acc = Vector2D.create(0,0);
 
-	//indexed by control name
-	this.controls = {};
+	//private selected control vars
+	this._selectedControl = '';
+	this._selectedIndex = 0;
 
-	//the current state of the menu
-	this.isOpen = false;
-	this.show = false;
+	//indexed by control name
+	this.controls = new ObjArray();
+
+	//the entity that will be the selector
+	this.selector = new Entity();
+	this.selector.addFrame('select','./src/resources/selector.png', 1000);
+	//this.selector.drawOptions.scaleWidth = 0.25;
+	//this.selector.drawOptions.scaleHeight = 0.25;
+	this.selector.direction = 'select';
 }
 
 //inheritance
 Menu.prototype = Object.create(GameState.prototype);
 
+//
+// Adds a new control to the menu
+//
+Menu.prototype.addControl = function(name, label, callback) {
+	var tmpCtrl = new Control(name, label),
+			numCtrls = this.controls.length();
+
+	//setup callback
+	tmpCtrl.engageCallback = (typeof callback === 'function') ? callback : function() { console.log('Callback not set on control: ', name); };
+
+	//setup position
+	tmpCtrl.pos.y = numCtrls * 50;
+
+	this.controls.add(name, tmpCtrl);
+	console.log('control added: ', name);
+
+}
+
+//
+// Engage Selected Control
+//
+Menu.prototype.engage = function() {
+	var ctrl = this.controls.get(this._selectedIndex);
+
+	if (ctrl) {
+		ctrl.engage();
+	}
+	else {
+		console.log('invalid control selected, index:', this._selectedIndex, ' length: ', this.controls.length());
+	}
+}
+
+//
+// Changes the currently selected control by specifying the direction:
+// up, down, left, right
+//
+// Optional param int numChanged will move that many controls in the given
+// direction
+//
+Menu.prototype.changeSelected = function(direction, numChanged) {
+
+	if (direction === 'down') {
+		this._selectedIndex += numChanged || 1;
+
+		if (this._selectedIndex >= this.controls.length()) {
+			this._selectedIndex = 0;
+		}
+
+	}
+	else if (direction === 'up') {
+		this._selectedIndex -= numChanged || 1;
+
+		if (this._selectedIndex < 0) {
+			this._selectedIndex = (this.controls.length() - 1);
+		}
+	}
+	else if (direction === 'left') {
+		//N/A
+	}
+	else if (direction === 'right') {
+		//N/A
+	}
+
+}
+
+//
+// Poll for Menu Input
+//
+Menu.prototype.pollInput = function(inputMap, inputCollection) {}
+
+
+//
+// Draw menu controls in a list by overwritting base state draw
+//
+Menu.prototype.draw = function(rend) {
+
+	//draw super class draw
+	this.constructor.prototype.draw.call(this, rend);
+
+	//draw controls to screen
+	for (var i = 0; i < this.controls.length(); i++) {
+		this.controls.get(i).draw(rend.ctx);
+	}
+
+	//draw selector
+	this.selector.pos.x = this.controls.get(this._selectedIndex).pos.x - 50;
+	this.selector.pos.y = this.controls.get(this._selectedIndex).pos.y + 5;
+	this.selector.draw(rend.ctx);
+
+}
 
 //export constructor
 module.exports = Menu;
 
-},{"../utilities/vector2D":15,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
+},{"../entity/entity":11,"../utilities/objarray":14,"../utilities/vector2D":16,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -483,82 +582,9 @@ exports.draw = function(gameState) {
 
 		if (renderState != null) {
 
-			//clear the canvas
-			rend.ctx.clearRect(0, 0, rend.width, rend.height);
+			//draw the current state
+			renderState.draw(rend);
 
-			//draw backdrop ... parallax?
-			if (renderState.scenery.backdrop != null) {
-
-			}
-
-			//draw background
-			if (renderState.scenery.background != null) {
-				rend.ctx.drawImage(renderState.scenery.background, 0, 0);
-			}
-
-			//draw npcs
-			if (renderState.npcs.length > 0) {
-
-			}
-
-			//draw interactables ... powerups?
-			if (renderState.interactables.length > 0) {
-
-			}
-
-			//draw enemies
-			if (renderState.enemies.length > 0) {
-
-				for (var i = 0; i < renderState.enemies.length; i++) {
-					var e = renderState.enemies[i];
-
-					if (e != null) {
-							e.draw(rend.ctx);
-
-							//draw aabb
-							//rend.ctx.strokeRect(e.aabbs[0].minBoundX,
-							//					e.aabbs[0].minBoundY,
-							//					e.aabbs[0].width,
-							//					e.aabbs[0].height);
-					}
-				}
-
-			}
-
-			//draw player including upgrades
-			if (renderState.player != null) {
-
-				//draw the base of the character
-				renderState.player.draw(rend.ctx);
-
-				//draw aabb
-				//rend.ctx.strokeRect(renderState.player.aabbs[0].minBoundX,
-				//					renderState.player.aabbs[0].minBoundY,
-				//					renderState.player.aabbs[0].width,
-				//					renderState.player.aabbs[0].height);
-			}
-
-			//draw foreground
-			if (renderState.scenery.foreground != null) {
-				rend.ctx.drawImage(renderState.scenery.foreground, 0, rend.height - 250);
-			}
-
-			//draw hud
-			if (renderState.hud != null) {
-
-			}
-
-			//draw basic text to the screen
-			if (renderState.plainText != null) {
-				rend.ctx.beginPath();
-				rend.ctx.font = "25pt sans-serif";
-				rend.ctx.fillText(renderState.plainText, 0 ,rend.height / 2);
-			}
-
-			//draw any optional rendering specified by the designer
-			if (renderState.optionalRenderingFunction != null) {
-				renderState.optionalRenderingFunction();
-			}
 		}
 		else {
 			console.log('Game state is not set!');
@@ -647,7 +673,7 @@ State.prototype.addInteractableToState = function(interactable) {
 	if (interactable.length) {
 		for (var i = 0; i < interactable.length; i++) {
 			this.interactables.push(interactable[i]);
-		}	
+		}
 	}
 	else {
 		this.interactables.push(interactable);
@@ -739,9 +765,100 @@ State.prototype.addOptionalRendering = function(callback) {
 	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
 };
 
+//
+// Renders this gamestate to the given renderer rend context
+//
+State.prototype.draw = function(rend) {
+
+  if (rend.ctx != null) {
+
+    //clear the canvas
+    rend.ctx.clearRect(0, 0, rend.width, rend.height);
+
+    //draw backdrop ... parallax?
+    if (this.scenery.backdrop != null) {
+
+    }
+
+    //draw background
+    if (this.scenery.background != null) {
+      rend.ctx.drawImage(this.scenery.background, 0, 0);
+    }
+
+    //draw npcs
+    if (this.npcs.length > 0) {
+
+    }
+
+    //draw interactables ... powerups?
+    if (this.interactables.length > 0) {
+
+    }
+
+    //draw enemies
+    if (this.enemies.length > 0) {
+
+      for (var i = 0; i < this.enemies.length; i++) {
+        var e = this.enemies[i];
+
+        if (e != null) {
+            e.draw(rend.ctx);
+
+            //draw aabb
+            //rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+            //					e.aabbs[0].minBoundY,
+            //					e.aabbs[0].width,
+            //					e.aabbs[0].height);
+        }
+      }
+
+    }
+
+    //draw player including upgrades
+    if (this.player != null) {
+
+      //draw the base of the character
+      this.player.draw(rend.ctx);
+
+      //draw aabb
+      //rend.ctx.strokeRect(this.player.aabbs[0].minBoundX,
+      //					this.player.aabbs[0].minBoundY,
+      //					this.player.aabbs[0].width,
+      //					this.player.aabbs[0].height);
+    }
+
+    //draw foreground
+    if (this.scenery.foreground != null) {
+      rend.ctx.drawImage(this.scenery.foreground, 0, rend.height - 250);
+    }
+
+    //draw hud
+    if (this.hud != null) {
+
+    }
+
+    //draw basic text to the screen
+    if (this.plainText != null) {
+      rend.ctx.beginPath();
+      rend.ctx.font = "25pt sans-serif";
+      rend.ctx.fillText(this.plainText, 0 ,rend.height / 2);
+    }
+
+    //draw any optional rendering specified by the designer
+    if (this.optionalRenderingFunction != null) {
+      this.optionalRenderingFunction(rend.ctx);
+    }
+  }
+  else {
+    console.log('drawing context is not set!');
+  }
+
+
+}
+
+
 //export the State constructor
 module.exports = State;
-
 
 },{"./image":3,"./input-manager":4}],8:[function(require,module,exports){
 /******************************************************************************
@@ -1163,7 +1280,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../core/boundingbox":1,"../utilities/vector2D":15,"./animation":8}],12:[function(require,module,exports){
+},{"../core/boundingbox":1,"../utilities/vector2D":16,"./animation":8}],12:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -1556,12 +1673,18 @@ function init() {
 		}
 	);
 
+/******************************************************************************
+Testing Menu and controls for Start Menu
+******************************************************************************/
+	var Menu = require('./core/menu'),
+			testMenu = new Menu('testMenu');
+
 	//input 'start' -- state 'title'
-	title.addSystemInput('start', 13,
+	testMenu.addSystemInput('engage', 13,
 
 		//keydownCallback
 		function() {
-			console.log('start pressed');
+			/*console.log('start pressed');
 
 			//add the input for state game
 			Input.useState(game);
@@ -1573,28 +1696,38 @@ function init() {
 			currState = game;
 
 			//remove initial start input
-			Input.removeInput('start');
+			Input.removeInput('start');*/
+
+			testMenu.engage();
+
 		}
 	);
 
-/******************************************************************************
-Testing Menu and controls for Start Menu
-******************************************************************************/
-	var Control = require('./core/controls/control'),
-			test = new Control('start','Start Game!'),
-			Menu = require('./core/menu'),
-			testMenu = new Menu('testMenu');
+	testMenu.addSystemInput('up', 87, function(){
+		testMenu.changeSelected('up');
+	});
+	testMenu.addSystemInput('down', 83, function() {
+		testMenu.changeSelected('down');
+	});
 
-	console.log(testMenu);
-	//add basic text for temporary title
-	//title.plainText = '<! Super Party Horse !> Press Enter to Party!';
-	title.optionalRenderingFunction = function() {
+	testMenu.addControl('start', 'Start Game', function() {
+		//test.pos.x = (width / 2) - (test.width / 2);
+		//test.pos.y = height / 2;
+		//test.showBorder = false;
+		//test.draw(ctx);
 
-		test.pos.x = (width / 2) - (test.width / 2);
-		test.pos.y = height / 2;
-		test.showBorder = false;
-		test.draw(ctx);
-	}
+		currState = Input.useState(game);
+		Renderer.useState(game);
+
+	});
+
+	testMenu.addControl('options', 'Options', function() {
+		console.log('Options Selected!');
+	});
+
+	testMenu.addControl('quit', 'Exit Game', function() {
+		console.log('Exit Game Selected!');
+	});
 /******************************************************************************
 ******************************************************************************/
 
@@ -1604,11 +1737,11 @@ Testing Menu and controls for Start Menu
 	game.setForeground("./src/resources/grass-foreground.png");
 
 	//initialize renderer
-	Renderer.init(ctx, width, height, title);
+	Renderer.init(ctx, width, height, testMenu);
 
 	//set title state TODO is it non-standard to have the method return the
 	//newly set state?
-	currState = Input.useState(title);
+	currState = Input.useState(testMenu);
 }
 
 //update the game. system inputs are always active, player inputs need to be
@@ -1681,7 +1814,83 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":14}],14:[function(require,module,exports){
+},{"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":15}],14:[function(require,module,exports){
+//
+// A DataStructure that allows for a string and an integer to be the keys in a
+// collection
+//
+// Made to prioritize adding and retrieving information in near constant time.
+// Removing is closer to linear time
+//
+// The collection is zero indexed AND indexed by name
+//
+var ObjArray = function() {
+
+	//the underlying structures
+	this._obj = {};
+	this._arr = [];
+
+}
+
+//
+// Add in a new object with the associated name
+//
+// Should be close to O(1) complexity
+//
+ObjArray.prototype.add = function(name, obj) {
+
+	this._obj[name] = obj;
+	this._arr.push(name);
+
+}
+
+//
+// Remove the object associate with the given name
+//
+// This data structure will eventually get full of null objects and cause a
+// lot of garbage / a huge object.
+//
+// A better implementation should have some way to quickly remove the null
+// properties from the _obj collection.
+//
+ObjArray.prototype.remove = function(name) {
+
+	//remove by setting this object to null
+	this._obj[name] = null;
+
+	//remove by splicing this object
+	for (var i = 0; i < this._arr.length; i++) {
+		if (this._arr[i] === name) {
+			this._arr.splice(i,1);
+		}
+	}
+
+}
+
+//
+// Retrieve based on string or integer identifier
+//
+ObjArray.prototype.get = function(id) {
+	if (typeof id === 'string') {
+		return this._obj[id];
+	}
+	else if (typeof id === 'number') {
+		return this._obj[this._arr[id]];
+	}
+}
+
+//
+// Returns the number of items in this collection
+//
+ObjArray.prototype.length = function() {
+	return this._arr.length;
+};
+
+
+//export constructor
+module.exports = ObjArray;
+
+},{}],15:[function(require,module,exports){
 var Player = require('../entity/player'),
     AABB = require('../core/boundingbox'),
     Entity = require('../entity/entity'),
@@ -1793,7 +2002,7 @@ exports.loadEnemyDefinition = function(numEnemies) {
 
 }
 
-},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],15:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],16:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.

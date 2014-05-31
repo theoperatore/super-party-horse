@@ -74,7 +74,7 @@ State.prototype.addInteractableToState = function(interactable) {
 	if (interactable.length) {
 		for (var i = 0; i < interactable.length; i++) {
 			this.interactables.push(interactable[i]);
-		}	
+		}
 	}
 	else {
 		this.interactables.push(interactable);
@@ -166,6 +166,97 @@ State.prototype.addOptionalRendering = function(callback) {
 	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
 };
 
+//
+// Renders this gamestate to the given renderer rend context
+//
+State.prototype.draw = function(rend) {
+
+  if (rend.ctx != null) {
+
+    //clear the canvas
+    rend.ctx.clearRect(0, 0, rend.width, rend.height);
+
+    //draw backdrop ... parallax?
+    if (this.scenery.backdrop != null) {
+
+    }
+
+    //draw background
+    if (this.scenery.background != null) {
+      rend.ctx.drawImage(this.scenery.background, 0, 0);
+    }
+
+    //draw npcs
+    if (this.npcs.length > 0) {
+
+    }
+
+    //draw interactables ... powerups?
+    if (this.interactables.length > 0) {
+
+    }
+
+    //draw enemies
+    if (this.enemies.length > 0) {
+
+      for (var i = 0; i < this.enemies.length; i++) {
+        var e = this.enemies[i];
+
+        if (e != null) {
+            e.draw(rend.ctx);
+
+            //draw aabb
+            //rend.ctx.strokeRect(e.aabbs[0].minBoundX,
+            //					e.aabbs[0].minBoundY,
+            //					e.aabbs[0].width,
+            //					e.aabbs[0].height);
+        }
+      }
+
+    }
+
+    //draw player including upgrades
+    if (this.player != null) {
+
+      //draw the base of the character
+      this.player.draw(rend.ctx);
+
+      //draw aabb
+      //rend.ctx.strokeRect(this.player.aabbs[0].minBoundX,
+      //					this.player.aabbs[0].minBoundY,
+      //					this.player.aabbs[0].width,
+      //					this.player.aabbs[0].height);
+    }
+
+    //draw foreground
+    if (this.scenery.foreground != null) {
+      rend.ctx.drawImage(this.scenery.foreground, 0, rend.height - 250);
+    }
+
+    //draw hud
+    if (this.hud != null) {
+
+    }
+
+    //draw basic text to the screen
+    if (this.plainText != null) {
+      rend.ctx.beginPath();
+      rend.ctx.font = "25pt sans-serif";
+      rend.ctx.fillText(this.plainText, 0 ,rend.height / 2);
+    }
+
+    //draw any optional rendering specified by the designer
+    if (this.optionalRenderingFunction != null) {
+      this.optionalRenderingFunction(rend.ctx);
+    }
+  }
+  else {
+    console.log('drawing context is not set!');
+  }
+
+
+}
+
+
 //export the State constructor
 module.exports = State;
-
