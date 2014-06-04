@@ -401,10 +401,16 @@ var GameState = require('./state'),
 //
 // A window that extends a state and contains controls
 //
-var Menu = function(name) {
+var Menu = function(name, title) {
 
 	//Inherit game state
 	GameState.call(this, name);
+
+	//title options
+	this.title = title || null;
+	this.titleFont = '48px Helvetica Neue, sans-serif';
+	this.titleFontStyle = '#0091ff';
+	this.titlePos = Vector2D.create(0,0);
 
 	//movement vectors
 	this.pos = Vector2D.create(0,0);
@@ -421,8 +427,6 @@ var Menu = function(name) {
 	//the entity that will be the selector
 	this.selector = new Entity();
 	this.selector.addFrame('select','./src/resources/selector.png', 1000);
-	//this.selector.drawOptions.scaleWidth = 0.25;
-	//this.selector.drawOptions.scaleHeight = 0.25;
 	this.selector.direction = 'select';
 }
 
@@ -444,6 +448,21 @@ Menu.prototype.addControl = function(name, label, callback) {
 
 	this.controls.add(name, tmpCtrl);
 	console.log('control added: ', name);
+
+}
+
+//
+// Add a control object to the menu
+//
+Menu.prototype.addControlObj = function(ctrl, callback) {
+
+	//overwrite callback if defined
+	if (typeof callback === 'function') {
+		ctrl.engageCallback = callback;
+	}
+
+	//add to the collection
+	this.controls.add(ctrl.name, ctrl);
 
 }
 
@@ -507,6 +526,14 @@ Menu.prototype.draw = function(rend) {
 
 	//draw super class draw
 	this.constructor.prototype.draw.call(this, rend);
+
+	//draw title
+	if (this.title) {
+		rend.ctx.beginPath();
+		rend.ctx.font = this.titleFont;
+		rend.ctx.fillStyle = this.titleFontStyle;
+		rend.ctx.fillText(this.title,this.titlePos.x, this.titlePos.y);
+	}
 
 	//draw controls to screen
 	for (var i = 0; i < this.controls.length(); i++) {
@@ -1668,8 +1695,6 @@ function init() {
 				player.attack('basic');
 			}
 
-
-
 		}
 	);
 
@@ -1677,31 +1702,30 @@ function init() {
 Testing Menu and controls for Start Menu
 ******************************************************************************/
 	var Menu = require('./core/menu'),
-			testMenu = new Menu('testMenu');
+			Control = require('./core/controls/control'),
+			testMenu = new Menu('testMenu'),
+			startCtrl = new Control('start', 'New Game'),
+			optionsCtrl = new Control('options', 'Options'),
+			quitCtrl = new Control('quit', 'Quit Game');
+
+			startCtrl.pos.x = (width / 2) - 100;
+			startCtrl.pos.y = height / 2;
+
+			optionsCtrl.pos.x = (width / 2) - 100;
+			optionsCtrl.pos.y = (height / 2) + 50;
+
+			quitCtrl.pos.x = (width / 2) - 100;
+			quitCtrl.pos.y = (height / 2) + 100;
+
+	testMenu.title = 'Super Party Horse';
+	testMenu.titleFont = 'lighter 128px Helvetica Neue';
+	testMenu.titlePos.x = width / 6;
+	testMenu.titlePos.y = 100;
 
 	//input 'start' -- state 'title'
-	testMenu.addSystemInput('engage', 13,
-
-		//keydownCallback
-		function() {
-			/*console.log('start pressed');
-
-			//add the input for state game
-			Input.useState(game);
-
-			//set up the renderer to use state game
-			Renderer.useState(game);
-
-			//set currState
-			currState = game;
-
-			//remove initial start input
-			Input.removeInput('start');*/
-
+	testMenu.addSystemInput('engage', 13, function() {
 			testMenu.engage();
-
-		}
-	);
+	});
 
 	testMenu.addSystemInput('up', 87, function(){
 		testMenu.changeSelected('up');
@@ -1710,23 +1734,17 @@ Testing Menu and controls for Start Menu
 		testMenu.changeSelected('down');
 	});
 
-	testMenu.addControl('start', 'Start Game', function() {
-		//test.pos.x = (width / 2) - (test.width / 2);
-		//test.pos.y = height / 2;
-		//test.showBorder = false;
-		//test.draw(ctx);
-
+	testMenu.addControlObj(startCtrl, function() {
 		currState = Input.useState(game);
 		Renderer.useState(game);
-
 	});
 
-	testMenu.addControl('options', 'Options', function() {
-		console.log('Options Selected!');
+	testMenu.addControlObj(optionsCtrl, function() {
+		console.log('Options Selected');
 	});
 
-	testMenu.addControl('quit', 'Exit Game', function() {
-		console.log('Exit Game Selected!');
+	testMenu.addControlObj(quitCtrl, function() {
+		console.log('Quit Selected');
 	});
 /******************************************************************************
 ******************************************************************************/
@@ -1814,7 +1832,7 @@ init();
 //start main game!
 requestAnimationFrame(update);
 
-},{"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":15}],14:[function(require,module,exports){
+},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":15}],14:[function(require,module,exports){
 //
 // A DataStructure that allows for a string and an integer to be the keys in a
 // collection

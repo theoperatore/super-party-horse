@@ -49,6 +49,17 @@ Control.prototype.engage = function() {
 }
 
 //
+// Update the position of this control based on movment vectors
+//
+Control.prototype.update = function(dt) {
+	this.vel.x += this.acc.x * dt;
+	this.pos.x += (1/2) * this.acc.x * (dt * dt) + this.vel.x * dt;
+
+	this.vel.y += this.acc.y * dt;
+	this.pos.y += (1/2) * this.acc.y * (dt * dt) + this.vel.y * dt;
+}
+
+//
 // Static draw of this control
 //
 Control.prototype.draw = function(ctx) {

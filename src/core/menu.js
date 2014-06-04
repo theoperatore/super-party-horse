@@ -7,10 +7,16 @@ var GameState = require('./state'),
 //
 // A window that extends a state and contains controls
 //
-var Menu = function(name) {
+var Menu = function(name, title) {
 
 	//Inherit game state
 	GameState.call(this, name);
+
+	//title options
+	this.title = title || null;
+	this.titleFont = '48px Helvetica Neue, sans-serif';
+	this.titleFontStyle = '#0091ff';
+	this.titlePos = Vector2D.create(0,0);
 
 	//movement vectors
 	this.pos = Vector2D.create(0,0);
@@ -18,7 +24,6 @@ var Menu = function(name) {
 	this.acc = Vector2D.create(0,0);
 
 	//private selected control vars
-	this._selectedControl = '';
 	this._selectedIndex = 0;
 
 	//indexed by control name
@@ -52,16 +57,32 @@ Menu.prototype.addControl = function(name, label, callback) {
 }
 
 //
-// Engage Selected Control
+// Add a control object to the menu
 //
-Menu.prototype.engage = function() {
-	var ctrl = this.controls.get(this._selectedIndex);
+Menu.prototype.addControlObj = function(ctrl, callback) {
+
+	//overwrite callback if defined
+	if (typeof callback === 'function') {
+		ctrl.engageCallback = callback;
+	}
+
+	//add to the collection
+	this.controls.add(ctrl.name, ctrl);
+
+}
+
+//
+// Engage Selected Control or given control name
+//
+Menu.prototype.engage = function(ctrlName) {
+	var name = ctrlName || this._selectedIndex,
+			ctrl = this.controls.get(name);
 
 	if (ctrl) {
 		ctrl.engage();
 	}
 	else {
-		console.log('invalid control selected, index:', this._selectedIndex, ' length: ', this.controls.length());
+		console.log('invalid control selected, index:', name, ' length: ', this.controls.length());
 	}
 }
 
@@ -111,6 +132,14 @@ Menu.prototype.draw = function(rend) {
 
 	//draw super class draw
 	this.constructor.prototype.draw.call(this, rend);
+
+	//draw title
+	if (this.title) {
+		rend.ctx.beginPath();
+		rend.ctx.font = this.titleFont;
+		rend.ctx.fillStyle = this.titleFontStyle;
+		rend.ctx.fillText(this.title,this.titlePos.x, this.titlePos.y);
+	}
 
 	//draw controls to screen
 	for (var i = 0; i < this.controls.length(); i++) {

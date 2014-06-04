@@ -220,8 +220,6 @@ function init() {
 				player.attack('basic');
 			}
 
-
-
 		}
 	);
 
@@ -229,31 +227,30 @@ function init() {
 Testing Menu and controls for Start Menu
 ******************************************************************************/
 	var Menu = require('./core/menu'),
-			testMenu = new Menu('testMenu');
+			Control = require('./core/controls/control'),
+			testMenu = new Menu('testMenu'),
+			startCtrl = new Control('start', 'New Game'),
+			optionsCtrl = new Control('options', 'Options'),
+			quitCtrl = new Control('quit', 'Quit Game');
+
+			startCtrl.pos.x = (width / 2) - 100;
+			startCtrl.pos.y = height / 2;
+
+			optionsCtrl.pos.x = (width / 2) - 100;
+			optionsCtrl.pos.y = (height / 2) + 50;
+
+			quitCtrl.pos.x = (width / 2) - 100;
+			quitCtrl.pos.y = (height / 2) + 100;
+
+	testMenu.title = 'Super Party Horse';
+	testMenu.titleFont = 'lighter 128px Helvetica Neue';
+	testMenu.titlePos.x = width / 6;
+	testMenu.titlePos.y = 100;
 
 	//input 'start' -- state 'title'
-	testMenu.addSystemInput('engage', 13,
-
-		//keydownCallback
-		function() {
-			/*console.log('start pressed');
-
-			//add the input for state game
-			Input.useState(game);
-
-			//set up the renderer to use state game
-			Renderer.useState(game);
-
-			//set currState
-			currState = game;
-
-			//remove initial start input
-			Input.removeInput('start');*/
-
+	testMenu.addSystemInput('engage', 13, function() {
 			testMenu.engage();
-
-		}
-	);
+	});
 
 	testMenu.addSystemInput('up', 87, function(){
 		testMenu.changeSelected('up');
@@ -262,23 +259,17 @@ Testing Menu and controls for Start Menu
 		testMenu.changeSelected('down');
 	});
 
-	testMenu.addControl('start', 'Start Game', function() {
-		//test.pos.x = (width / 2) - (test.width / 2);
-		//test.pos.y = height / 2;
-		//test.showBorder = false;
-		//test.draw(ctx);
-
+	testMenu.addControlObj(startCtrl, function() {
 		currState = Input.useState(game);
 		Renderer.useState(game);
-
 	});
 
-	testMenu.addControl('options', 'Options', function() {
-		console.log('Options Selected!');
+	testMenu.addControlObj(optionsCtrl, function() {
+		console.log('Options Selected');
 	});
 
-	testMenu.addControl('quit', 'Exit Game', function() {
-		console.log('Exit Game Selected!');
+	testMenu.addControlObj(quitCtrl, function() {
+		console.log('Quit Selected');
 	});
 /******************************************************************************
 ******************************************************************************/
