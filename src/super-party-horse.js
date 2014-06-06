@@ -236,7 +236,6 @@ Start Menu
 	// Test game state alet
 	//
 	var alertTest = new GameState('alert');
-	alertTest.setAlert('Level 1');
 
 	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
@@ -272,12 +271,23 @@ Start Menu
 	});
 
 	startMenu.addControlObj(startCtrl, function() {
+
+		//should initialize state game as if just starting for the first time
 		currState = Input.useState(game);
 		Renderer.useState(game);
 	});
 
 	startMenu.addControlObj(optionsCtrl, function() {
 		//console.log('Options Selected');
+
+		alertTest.setAlert('Level 1', {
+			complete: function() {
+
+				//TODO Works, but need to re-initialize main game state
+				//currState = Input.useState(game);
+				//Renderer.useState(game);
+			}
+		});
 		currState = Input.useState(alertTest);
 		Renderer.useState(alertTest);
 	});

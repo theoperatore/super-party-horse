@@ -673,8 +673,9 @@ var State = function State(name) {
     font : "bold 64px Helvetica Neue, sans-serif",
     alpha : 1,
     style : "rgba(51, 51, 51, 1)",
-    rendTime : 1000,
-    top : 100
+    baseStyle : "rgba(51, 51, 51, 1)",
+    top : 100,
+    complete : function() {}
   };
 };
 
@@ -827,9 +828,10 @@ State.prototype.setAlert = function(text, options) {
   this.alert.text = text;
   this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
   this.alert.alpha = (options && options.alpha) ? options.alpha : 1;
-  this.alert.style = (options && options.style) ? options.style : "#333";
-  this.alert.rendTime = (options && options.rendTime) ? options.rendTime : 1000;
+  this.alert.style = (options && options.style) ? options.style : '#333333';
+  this.alert.baseStyle = (options && options.style) ? options.style : '#333333';
   this.alert.top = (options && options.top) ? options.top : 100;
+  this.alert.complete = (options && options.complete) ? options.complete : null;
 }
 
 //
@@ -837,6 +839,41 @@ State.prototype.setAlert = function(text, options) {
 // hud, alert
 //
 State.prototype.update = function(dt) {
+
+  //update alert text only
+  if (this.alert.text) {
+    if (this.alert.alpha > 0) {
+      this.alert.alpha -= 0.01;
+
+      //manipulate color
+      if (this.alert.baseStyle[0] === '#') {
+        if (this.alert.baseStyle.length === 7) {
+          var r = parseInt((this.alert.baseStyle.substring(1,3)), 16),
+              g = parseInt((this.alert.baseStyle.substring(3,5)), 16),
+              b = parseInt((this.alert.baseStyle.substring(5,7)), 16);
+
+          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+        }
+        else if (this.alert.baseStyle.length === 4) {
+          var r = parseInt((this.alert.baseStyle.substring(1,2) + this.alert.baseStyle.substring(1,2)), 16),
+              g = parseInt((this.alert.baseStyle.substring(2,3) + this.alert.baseStyle.substring(2,3)), 16),
+              b = parseInt((this.alert.baseStyle.substring(3,4) + this.alert.baseStyle.substring(3,4)), 16);
+
+          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+        }
+      }
+
+      //check for completeness
+      var curr = this.alert.alpha;
+      if ((curr - 0.01) <= 0) {
+        this.alert.text = null;
+        if (typeof this.alert.complete === 'function') {
+          this.alert.complete();
+        }
+      }
+
+    }
+  }
 
   //if the player is set
   if (this.player) {
@@ -891,7 +928,7 @@ State.prototype.update = function(dt) {
 
   //update interactables
   if (this.interactables.length > 0) {
-    
+
   }
 }
 
@@ -1840,7 +1877,6 @@ Start Menu
 	// Test game state alet
 	//
 	var alertTest = new GameState('alert');
-	alertTest.setAlert('Level 1');
 
 	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
@@ -1882,6 +1918,13 @@ Start Menu
 
 	startMenu.addControlObj(optionsCtrl, function() {
 		//console.log('Options Selected');
+
+		alertTest.setAlert('Level 1', {
+			complete: function() {
+				currState = Input.useState(game);
+				Renderer.useState(game);
+			}
+		});
 		currState = Input.useState(alertTest);
 		Renderer.useState(alertTest);
 	});
