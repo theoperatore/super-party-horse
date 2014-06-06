@@ -117,6 +117,17 @@ Control.prototype.engage = function() {
 }
 
 //
+// Update the position of this control based on movment vectors
+//
+Control.prototype.update = function(dt) {
+	this.vel.x += this.acc.x * dt;
+	this.pos.x += (1/2) * this.acc.x * (dt * dt) + this.vel.x * dt;
+
+	this.vel.y += this.acc.y * dt;
+	this.pos.y += (1/2) * this.acc.y * (dt * dt) + this.vel.y * dt;
+}
+
+//
 // Static draw of this control
 //
 Control.prototype.draw = function(ctx) {
@@ -408,7 +419,7 @@ var Menu = function(name, title) {
 
 	//title options
 	this.title = title || null;
-	this.titleFont = '48px Helvetica Neue, sans-serif';
+	this.titleFont = 'lighter 128px Helvetica Neue, sans-serif';
 	this.titleFontStyle = '#0091ff';
 	this.titlePos = Vector2D.create(0,0);
 
@@ -418,7 +429,6 @@ var Menu = function(name, title) {
 	this.acc = Vector2D.create(0,0);
 
 	//private selected control vars
-	this._selectedControl = '';
 	this._selectedIndex = 0;
 
 	//indexed by control name
@@ -467,16 +477,17 @@ Menu.prototype.addControlObj = function(ctrl, callback) {
 }
 
 //
-// Engage Selected Control
+// Engage Selected Control or given control name
 //
-Menu.prototype.engage = function() {
-	var ctrl = this.controls.get(this._selectedIndex);
+Menu.prototype.engage = function(ctrlName) {
+	var name = ctrlName || this._selectedIndex,
+			ctrl = this.controls.get(name);
 
 	if (ctrl) {
 		ctrl.engage();
 	}
 	else {
-		console.log('invalid control selected, index:', this._selectedIndex, ' length: ', this.controls.length());
+		console.log('invalid control selected, index:', name, ' length: ', this.controls.length());
 	}
 }
 
@@ -518,13 +529,22 @@ Menu.prototype.changeSelected = function(direction, numChanged) {
 //
 Menu.prototype.pollInput = function(inputMap, inputCollection) {}
 
+//
+// Update the position of the menu based on movement vectors
+//
+Menu.prototype.update = function(dt) {}
+
+//
+// Draw the menu from the specifed direction as it advances onto the screen.
+//
+Menu.prototype.drawFrom = function(rend, direction, totalTime, step) {}
 
 //
 // Draw menu controls in a list by overwritting base state draw
 //
 Menu.prototype.draw = function(rend) {
 
-	//draw super class draw
+	//draw super class
 	this.constructor.prototype.draw.call(this, rend);
 
 	//draw title
@@ -648,6 +668,14 @@ var State = function State(name) {
 	this.hud = null;
 	this.plainText = null;
 	this.optionalRenderingFunction = null;
+  this.alert = {
+    text : null,
+    font : "bold 64px Helvetica Neue, sans-serif",
+    alpha : 1,
+    style : "rgba(51, 51, 51, 1)",
+    rendTime : 1000,
+    top : 100
+  };
 };
 
 /******************************************************************************
@@ -793,6 +821,18 @@ State.prototype.addOptionalRendering = function(callback) {
 };
 
 //
+// Set alert text and options
+//
+State.prototype.setAlert = function(text, options) {
+  this.alert.text = text;
+  this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
+  this.alert.alpha = (options && options.alpha) ? options.alpha : 1;
+  this.alert.style = (options && options.style) ? options.style : "#333";
+  this.alert.rendTime = (options && options.rendTime) ? options.rendTime : 1000;
+  this.alert.top = (options && options.top) ? options.top : 100;
+}
+
+//
 // Renders this gamestate to the given renderer rend context
 //
 State.prototype.draw = function(rend) {
@@ -867,8 +907,21 @@ State.prototype.draw = function(rend) {
     //draw basic text to the screen
     if (this.plainText != null) {
       rend.ctx.beginPath();
-      rend.ctx.font = "25pt sans-serif";
+      rend.ctx.font = "lighter 25pt Helvetica Neue,sans-serif";
       rend.ctx.fillText(this.plainText, 0 ,rend.height / 2);
+    }
+
+    //draw a text alert to the screen
+    if (this.alert.text != null) {
+
+      rend.ctx.beginPath();
+      rend.ctx.font = this.alert.font;
+      rend.ctx.fillStyle = this.alert.style;
+
+      var x = ((rend.width / 2) - rend.ctx.measureText(this.alert.text).width / 2);
+      //console.log('drawing text', this.alert.text,'at pos: ', x);
+
+      rend.ctx.fillText(this.alert.text, x, this.alert.top);
     }
 
     //draw any optional rendering specified by the designer
@@ -1484,6 +1537,7 @@ var canvas = document.getElementById('playground'),
 	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
 	dt = 0,
 	currState,
+	anim,
 
 /******************************************************************************
 
@@ -1493,6 +1547,8 @@ var canvas = document.getElementById('playground'),
 Entity = require("./entity/entity"),
 GameState = require("./core/state"),
 Enemy = require('./entity/enemy'),
+Control = require('./core/controls/control'),
+Menu = require('./core/menu'),
 
 /******************************************************************************
 
@@ -1509,7 +1565,7 @@ Resource = require('./utilities/resource'),
 
 ******************************************************************************/
 player,
-title = new GameState('title'),
+startMenu = new Menu('start'),
 game = new GameState('game'),
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
@@ -1699,67 +1755,84 @@ function init() {
 	);
 
 /******************************************************************************
-Testing Menu and controls for Start Menu
+Start Menu
 ******************************************************************************/
-	var Menu = require('./core/menu'),
-			Control = require('./core/controls/control'),
-			testMenu = new Menu('testMenu'),
-			startCtrl = new Control('start', 'New Game'),
+
+	//
+	// Test game state alet
+	//
+	var alertTest = new GameState('alert');
+	alertTest.setAlert('Level\n1');
+
+	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
 			quitCtrl = new Control('quit', 'Quit Game');
 
-			startCtrl.pos.x = (width / 2) - 100;
-			startCtrl.pos.y = height / 2;
+	startCtrl.pos.x = (width / 2) - 100;
+	startCtrl.pos.y = height - 150;
 
-			optionsCtrl.pos.x = (width / 2) - 100;
-			optionsCtrl.pos.y = (height / 2) + 50;
+	optionsCtrl.pos.x = (width / 2) - 100;
+	optionsCtrl.pos.y = height - 100;
 
-			quitCtrl.pos.x = (width / 2) - 100;
-			quitCtrl.pos.y = (height / 2) + 100;
+	quitCtrl.pos.x = (width / 2) - 100;
+	quitCtrl.pos.y = height - 50;
 
-	testMenu.title = 'Super Party Horse';
-	testMenu.titleFont = 'lighter 128px Helvetica Neue';
-	testMenu.titlePos.x = width / 6;
-	testMenu.titlePos.y = 100;
+	startMenu.title = 'Super Party Horse';
+	startMenu.titleFont = 'lighter 148px Helvetica Neue';
+	ctx.beginPath();
+	ctx.font = startMenu.titleFont;
+	startMenu.titlePos.x = ((width / 2) - (ctx.measureText(startMenu.title).width / 2));
+	ctx.closePath();
+	startMenu.titlePos.y = 100;
 
 	//input 'start' -- state 'title'
-	testMenu.addSystemInput('engage', 13, function() {
-			testMenu.engage();
+	startMenu.addSystemInput('engage', 13, function() {
+			startMenu.engage();
 	});
 
-	testMenu.addSystemInput('up', 87, function(){
-		testMenu.changeSelected('up');
+	startMenu.addSystemInput('up', 87, function(){
+		startMenu.changeSelected('up');
 	});
-	testMenu.addSystemInput('down', 83, function() {
-		testMenu.changeSelected('down');
+	startMenu.addSystemInput('down', 83, function() {
+		startMenu.changeSelected('down');
 	});
 
-	testMenu.addControlObj(startCtrl, function() {
+	startMenu.addControlObj(startCtrl, function() {
 		currState = Input.useState(game);
 		Renderer.useState(game);
 	});
 
-	testMenu.addControlObj(optionsCtrl, function() {
-		console.log('Options Selected');
+	startMenu.addControlObj(optionsCtrl, function() {
+		//console.log('Options Selected');
+		currState = Input.useState(alertTest);
+		Renderer.useState(alertTest);
 	});
 
-	testMenu.addControlObj(quitCtrl, function() {
-		console.log('Quit Selected');
+	startMenu.addControlObj(quitCtrl, function() {
+		//console.log('Quit Selected');
+		window.close();
 	});
-/******************************************************************************
-******************************************************************************/
 
 	//set up main game state
 	game.addPlayerToState(player);
 	game.setBackground("./src/resources/grass-background.png");
 	game.setForeground("./src/resources/grass-foreground.png");
 
-	//initialize renderer
-	Renderer.init(ctx, width, height, testMenu);
+	//add escape key input to stop animation frames? or go back to title screen
+	Input.addSystemInput('stop', 27, function() {
+		//cancelAnimationFrame(anim);
 
-	//set title state TODO is it non-standard to have the method return the
+		currState = Input.useState(startMenu);
+		Renderer.useState(startMenu);
+
+	});
+
+	//initialize renderer
+	Renderer.init(ctx, width, height, startMenu);
+
+	//set startMenu state TODO is it non-standard to have the method return the
 	//newly set state?
-	currState = Input.useState(testMenu);
+	currState = Input.useState(startMenu);
 }
 
 //update the game. system inputs are always active, player inputs need to be
@@ -1767,7 +1840,7 @@ Testing Menu and controls for Start Menu
 function update(timestamp) {
 
 	//set up next update loop
-	requestAnimationFrame(update);
+	anim = requestAnimationFrame(update);
 
 	now = timestamp;
 	dt = now - prev;
@@ -1830,7 +1903,7 @@ function update(timestamp) {
 init();
 
 //start main game!
-requestAnimationFrame(update);
+anim = requestAnimationFrame(update);
 
 },{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":15}],14:[function(require,module,exports){
 //

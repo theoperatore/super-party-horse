@@ -22,6 +22,14 @@ var State = function State(name) {
 	this.hud = null;
 	this.plainText = null;
 	this.optionalRenderingFunction = null;
+  this.alert = {
+    text : null,
+    font : "bold 64px Helvetica Neue, sans-serif",
+    alpha : 1,
+    style : "rgba(51, 51, 51, 1)",
+    rendTime : 1000,
+    top : 100
+  };
 };
 
 /******************************************************************************
@@ -167,6 +175,26 @@ State.prototype.addOptionalRendering = function(callback) {
 };
 
 //
+// Set alert text and options
+//
+State.prototype.setAlert = function(text, options) {
+  this.alert.text = text;
+  this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
+  this.alert.alpha = (options && options.alpha) ? options.alpha : 1;
+  this.alert.style = (options && options.style) ? options.style : "#333";
+  this.alert.rendTime = (options && options.rendTime) ? options.rendTime : 1000;
+  this.alert.top = (options && options.top) ? options.top : 100;
+}
+
+//
+// Update this state's assets: scenery, npcs, interactables, enemies, player
+// hud, alert
+//
+State.prototype.update = function(dt) {
+  
+}
+
+//
 // Renders this gamestate to the given renderer rend context
 //
 State.prototype.draw = function(rend) {
@@ -241,8 +269,21 @@ State.prototype.draw = function(rend) {
     //draw basic text to the screen
     if (this.plainText != null) {
       rend.ctx.beginPath();
-      rend.ctx.font = "25pt sans-serif";
+      rend.ctx.font = "lighter 25pt Helvetica Neue,sans-serif";
       rend.ctx.fillText(this.plainText, 0 ,rend.height / 2);
+    }
+
+    //draw a text alert to the screen
+    if (this.alert.text != null) {
+
+      rend.ctx.beginPath();
+      rend.ctx.font = this.alert.font;
+      rend.ctx.fillStyle = this.alert.style;
+
+      var x = ((rend.width / 2) - rend.ctx.measureText(this.alert.text).width / 2);
+      //console.log('drawing text', this.alert.text,'at pos: ', x);
+
+      rend.ctx.fillText(this.alert.text, x, this.alert.top);
     }
 
     //draw any optional rendering specified by the designer

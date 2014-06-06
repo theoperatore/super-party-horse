@@ -14,7 +14,7 @@ var Menu = function(name, title) {
 
 	//title options
 	this.title = title || null;
-	this.titleFont = '48px Helvetica Neue, sans-serif';
+	this.titleFont = 'lighter 128px Helvetica Neue, sans-serif';
 	this.titleFontStyle = '#0091ff';
 	this.titlePos = Vector2D.create(0,0);
 
@@ -124,13 +124,22 @@ Menu.prototype.changeSelected = function(direction, numChanged) {
 //
 Menu.prototype.pollInput = function(inputMap, inputCollection) {}
 
+//
+// Update the position of the menu based on movement vectors
+//
+Menu.prototype.update = function(dt) {}
+
+//
+// Draw the menu from the specifed direction as it advances onto the screen.
+//
+Menu.prototype.drawFrom = function(rend, direction, totalTime, step) {}
 
 //
 // Draw menu controls in a list by overwritting base state draw
 //
 Menu.prototype.draw = function(rend) {
 
-	//draw super class draw
+	//draw super class
 	this.constructor.prototype.draw.call(this, rend);
 
 	//draw title

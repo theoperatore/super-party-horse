@@ -9,6 +9,7 @@ var canvas = document.getElementById('playground'),
 	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
 	dt = 0,
 	currState,
+	anim,
 
 /******************************************************************************
 
@@ -18,6 +19,8 @@ var canvas = document.getElementById('playground'),
 Entity = require("./entity/entity"),
 GameState = require("./core/state"),
 Enemy = require('./entity/enemy'),
+Control = require('./core/controls/control'),
+Menu = require('./core/menu'),
 
 /******************************************************************************
 
@@ -34,7 +37,7 @@ Resource = require('./utilities/resource'),
 
 ******************************************************************************/
 player,
-title = new GameState('title'),
+startMenu = new Menu('start'),
 game = new GameState('game'),
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
@@ -224,67 +227,84 @@ function init() {
 	);
 
 /******************************************************************************
-Testing Menu and controls for Start Menu
+Start Menu
 ******************************************************************************/
-	var Menu = require('./core/menu'),
-			Control = require('./core/controls/control'),
-			testMenu = new Menu('testMenu'),
-			startCtrl = new Control('start', 'New Game'),
+
+	//
+	// Test game state alet
+	//
+	var alertTest = new GameState('alert');
+	alertTest.setAlert('Level 1');
+
+	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
 			quitCtrl = new Control('quit', 'Quit Game');
 
-			startCtrl.pos.x = (width / 2) - 100;
-			startCtrl.pos.y = height / 2;
+	startCtrl.pos.x = (width / 2) - 100;
+	startCtrl.pos.y = height - 150;
 
-			optionsCtrl.pos.x = (width / 2) - 100;
-			optionsCtrl.pos.y = (height / 2) + 50;
+	optionsCtrl.pos.x = (width / 2) - 100;
+	optionsCtrl.pos.y = height - 100;
 
-			quitCtrl.pos.x = (width / 2) - 100;
-			quitCtrl.pos.y = (height / 2) + 100;
+	quitCtrl.pos.x = (width / 2) - 100;
+	quitCtrl.pos.y = height - 50;
 
-	testMenu.title = 'Super Party Horse';
-	testMenu.titleFont = 'lighter 128px Helvetica Neue';
-	testMenu.titlePos.x = width / 6;
-	testMenu.titlePos.y = 100;
+	startMenu.title = 'Super Party Horse';
+	startMenu.titleFont = 'lighter 148px Helvetica Neue';
+	ctx.beginPath();
+	ctx.font = startMenu.titleFont;
+	startMenu.titlePos.x = ((width / 2) - (ctx.measureText(startMenu.title).width / 2));
+	ctx.closePath();
+	startMenu.titlePos.y = 100;
 
 	//input 'start' -- state 'title'
-	testMenu.addSystemInput('engage', 13, function() {
-			testMenu.engage();
+	startMenu.addSystemInput('engage', 13, function() {
+			startMenu.engage();
 	});
 
-	testMenu.addSystemInput('up', 87, function(){
-		testMenu.changeSelected('up');
+	startMenu.addSystemInput('up', 87, function(){
+		startMenu.changeSelected('up');
 	});
-	testMenu.addSystemInput('down', 83, function() {
-		testMenu.changeSelected('down');
+	startMenu.addSystemInput('down', 83, function() {
+		startMenu.changeSelected('down');
 	});
 
-	testMenu.addControlObj(startCtrl, function() {
+	startMenu.addControlObj(startCtrl, function() {
 		currState = Input.useState(game);
 		Renderer.useState(game);
 	});
 
-	testMenu.addControlObj(optionsCtrl, function() {
-		console.log('Options Selected');
+	startMenu.addControlObj(optionsCtrl, function() {
+		//console.log('Options Selected');
+		currState = Input.useState(alertTest);
+		Renderer.useState(alertTest);
 	});
 
-	testMenu.addControlObj(quitCtrl, function() {
-		console.log('Quit Selected');
+	startMenu.addControlObj(quitCtrl, function() {
+		//console.log('Quit Selected');
+		window.close();
 	});
-/******************************************************************************
-******************************************************************************/
 
 	//set up main game state
 	game.addPlayerToState(player);
 	game.setBackground("./src/resources/grass-background.png");
 	game.setForeground("./src/resources/grass-foreground.png");
 
-	//initialize renderer
-	Renderer.init(ctx, width, height, testMenu);
+	//add escape key input to stop animation frames? or go back to title screen
+	Input.addSystemInput('stop', 27, function() {
+		//cancelAnimationFrame(anim);
 
-	//set title state TODO is it non-standard to have the method return the
+		currState = Input.useState(startMenu);
+		Renderer.useState(startMenu);
+
+	});
+
+	//initialize renderer
+	Renderer.init(ctx, width, height, startMenu);
+
+	//set startMenu state TODO is it non-standard to have the method return the
 	//newly set state?
-	currState = Input.useState(testMenu);
+	currState = Input.useState(startMenu);
 }
 
 //update the game. system inputs are always active, player inputs need to be
@@ -292,7 +312,7 @@ Testing Menu and controls for Start Menu
 function update(timestamp) {
 
 	//set up next update loop
-	requestAnimationFrame(update);
+	anim = requestAnimationFrame(update);
 
 	now = timestamp;
 	dt = now - prev;
@@ -355,4 +375,4 @@ function update(timestamp) {
 init();
 
 //start main game!
-requestAnimationFrame(update);
+anim = requestAnimationFrame(update);
