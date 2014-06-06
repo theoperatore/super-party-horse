@@ -191,7 +191,67 @@ State.prototype.setAlert = function(text, options) {
 // hud, alert
 //
 State.prototype.update = function(dt) {
-  
+
+  //if the player is set
+  if (this.player) {
+
+    //poll input
+    this.player.pollInput(inputManager.getInputCollection());
+    this.player.update(dt);
+  }
+
+  //if there are enemies to update
+  if (this.enemies.length > 0) {
+
+    //loop through them
+    for(var i = 0; i < this.enemies.length; i++) {
+
+      if (this.enemies[i]) {
+
+        //updates pos and AI
+        this.enemies[i].update(dt);
+
+        //if the player collides with enemy
+        //only check if the enemy is near the player?
+        if (this.player.aabbs[0].collidesWith(this.enemies[i].aabbs[0])) {
+
+          //player hurt!
+
+        }
+
+        //if player attacks collide with enemy
+        for (var a = 0; a < this.player.currAttacks.length; a++) {
+
+            if (this.player.currAttacks[a].aabbs[0].collidesWith(this.enemies[i].aabbs[0])) {
+
+              //remove enemy from array
+              this.enemies.splice(i,1);
+              //currState.enemies[i].stop();
+
+              break;
+
+            }
+
+        }//end for player attacks
+
+      }//end if enemy exists
+    }//end for loop through enemies
+  }//end update enemies
+
+  //update npcs
+  if (this.npcs.length > 0) {
+
+  }
+
+  //update interactables
+  if (this.interactables.length > 0) {
+
+  }
+
+  //update alert text
+  if (this.alert.text) {
+    
+  }
 }
 
 //

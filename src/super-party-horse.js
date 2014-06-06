@@ -48,6 +48,7 @@ enemies = [],
 	Constants
 
 ******************************************************************************/
+//must add input map to player
 PLAYER_INPUT_MAP  = {
 	'attack': 32, //spacebar
 	'left'  : 65, //a
@@ -97,6 +98,7 @@ function init() {
 
 	//load player
 	player = Resource.loadPlayerDefinition();
+	player.setInputMap(PLAYER_INPUT_MAP);
 	player.direction = 'right';
 	player.dirLock = true;
 
@@ -320,52 +322,8 @@ function update(timestamp) {
 
 	//timer updates
 
-	//check player if player exists in current game state
-	if (currState.player) {
-
-			//check for player input and update player pos
-			currState.player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
-			currState.player.update(dt);
-	}
-
-	//if there are enemies to update...
-	if (currState.enemies.length != 0) {
-
-		//loop through and update them
-		for (var i = 0; i < currState.enemies.length; i++) {
-
-			if (currState.enemies[i]) {
-
-				//updates pos and AI
-				currState.enemies[i].update(dt);
-
-				//if the player collides with enemy
-				//only check if the enemy is near the player?
-				if (currState.player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
-
-					//player hurt!
-
-				}
-
-				//if player attacks collide with enemy
-				for (var a = 0; a < currState.player.currAttacks.length; a++) {
-
-						if (currState.player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
-
-							//remove enemy from array
-							currState.enemies.splice(i,1);
-							//currState.enemies[i].stop();
-
-							break;
-
-						}
-
-				}//end for player attacks
-
-			}//end if enemy exists
-		}//end enemy update/collision loop
-
-	}//end if enemies.length != 0
+	//update the current state
+	currState.update(dt);
 
 	//draw the game
 	Renderer.draw();

@@ -833,6 +833,69 @@ State.prototype.setAlert = function(text, options) {
 }
 
 //
+// Update this state's assets: scenery, npcs, interactables, enemies, player
+// hud, alert
+//
+State.prototype.update = function(dt) {
+
+  //if the player is set
+  if (this.player) {
+
+    //poll input
+    this.player.pollInput(inputManager.getInputCollection());
+    this.player.update(dt);
+  }
+
+  //if there are enemies to update
+  if (this.enemies.length > 0) {
+
+    //loop through them
+    for(var i = 0; i < this.enemies.length; i++) {
+
+      if (this.enemies[i]) {
+
+        //updates pos and AI
+        this.enemies[i].update(dt);
+
+        //if the player collides with enemy
+        //only check if the enemy is near the player?
+        if (this.player.aabbs[0].collidesWith(this.enemies[i].aabbs[0])) {
+
+          //player hurt!
+
+        }
+
+        //if player attacks collide with enemy
+        for (var a = 0; a < this.player.currAttacks.length; a++) {
+
+            if (this.player.currAttacks[a].aabbs[0].collidesWith(this.enemies[i].aabbs[0])) {
+
+              //remove enemy from array
+              this.enemies.splice(i,1);
+              //currState.enemies[i].stop();
+
+              break;
+
+            }
+
+        }//end for player attacks
+
+      }//end if enemy exists
+    }//end for loop through enemies
+  }//end update enemies
+
+  //update npcs
+  if (this.npcs.length > 0) {
+
+  }
+
+  //update interactables
+  if (this.interactables.length > 0) {
+    
+  }
+}
+
+//
 // Renders this gamestate to the given renderer rend context
 //
 State.prototype.draw = function(rend) {
@@ -1377,6 +1440,9 @@ var Player = function Player() {
 
 	//curr attacks to update and detect collisions
 	this.currAttacks = [];
+
+	//the input map to check against
+	this.inputMap = {};
 }
 
 //inheritance
@@ -1406,6 +1472,15 @@ Player.prototype.addAttack = function(attackName, attack) {
 
 /******************************************************************************
 
+Set the player's input map
+
+******************************************************************************/
+Player.prototype.setInputMap = function(map) {
+	this.inputMap = map;
+}
+
+/******************************************************************************
+
 Update the player
 
 ******************************************************************************/
@@ -1427,8 +1502,9 @@ Player.prototype.update = function(dt) {
 Check for input for the player
 
 ******************************************************************************/
-Player.prototype.pollInput = function(inputMap, inputCollection) {
-	var playerInput;
+Player.prototype.pollInput = function(inputCollection, customInputMap) {
+	var playerInput,
+			inputMap = customInputMap || this.inputMap;
 
 	for (var name in inputMap) {
 
@@ -1576,6 +1652,7 @@ enemies = [],
 	Constants
 
 ******************************************************************************/
+//must add input map to player
 PLAYER_INPUT_MAP  = {
 	'attack': 32, //spacebar
 	'left'  : 65, //a
@@ -1625,6 +1702,7 @@ function init() {
 
 	//load player
 	player = Resource.loadPlayerDefinition();
+	player.setInputMap(PLAYER_INPUT_MAP);
 	player.direction = 'right';
 	player.dirLock = true;
 
@@ -1762,7 +1840,7 @@ Start Menu
 	// Test game state alet
 	//
 	var alertTest = new GameState('alert');
-	alertTest.setAlert('Level\n1');
+	alertTest.setAlert('Level 1');
 
 	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
@@ -1848,52 +1926,8 @@ function update(timestamp) {
 
 	//timer updates
 
-	//check player if player exists in current game state
-	if (currState.player) {
-
-			//check for player input and update player pos
-			currState.player.pollInput(PLAYER_INPUT_MAP, Input.getInputCollection());
-			currState.player.update(dt);
-	}
-
-	//if there are enemies to update...
-	if (currState.enemies.length != 0) {
-
-		//loop through and update them
-		for (var i = 0; i < currState.enemies.length; i++) {
-
-			if (currState.enemies[i]) {
-
-				//updates pos and AI
-				currState.enemies[i].update(dt);
-
-				//if the player collides with enemy
-				//only check if the enemy is near the player?
-				if (currState.player.aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
-
-					//player hurt!
-
-				}
-
-				//if player attacks collide with enemy
-				for (var a = 0; a < currState.player.currAttacks.length; a++) {
-
-						if (currState.player.currAttacks[a].aabbs[0].collidesWith(currState.enemies[i].aabbs[0])) {
-
-							//remove enemy from array
-							currState.enemies.splice(i,1);
-							//currState.enemies[i].stop();
-
-							break;
-
-						}
-
-				}//end for player attacks
-
-			}//end if enemy exists
-		}//end enemy update/collision loop
-
-	}//end if enemies.length != 0
+	//update the current state
+	currState.update(dt);
 
 	//draw the game
 	Renderer.draw();

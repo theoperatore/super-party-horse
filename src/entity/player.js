@@ -14,6 +14,9 @@ var Player = function Player() {
 
 	//curr attacks to update and detect collisions
 	this.currAttacks = [];
+
+	//the input map to check against
+	this.inputMap = {};
 }
 
 //inheritance
@@ -43,6 +46,15 @@ Player.prototype.addAttack = function(attackName, attack) {
 
 /******************************************************************************
 
+Set the player's input map
+
+******************************************************************************/
+Player.prototype.setInputMap = function(map) {
+	this.inputMap = map;
+}
+
+/******************************************************************************
+
 Update the player
 
 ******************************************************************************/
@@ -64,8 +76,9 @@ Player.prototype.update = function(dt) {
 Check for input for the player
 
 ******************************************************************************/
-Player.prototype.pollInput = function(inputMap, inputCollection) {
-	var playerInput;
+Player.prototype.pollInput = function(inputCollection, customInputMap) {
+	var playerInput,
+			inputMap = customInputMap || this.inputMap;
 
 	for (var name in inputMap) {
 
