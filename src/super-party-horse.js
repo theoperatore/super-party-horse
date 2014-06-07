@@ -10,6 +10,8 @@ var canvas = document.getElementById('playground'),
 	dt = 0,
 	currState,
 	anim,
+	width,
+	height,
 
 /******************************************************************************
 
@@ -38,7 +40,10 @@ Resource = require('./utilities/resource'),
 ******************************************************************************/
 player,
 startMenu = new Menu('start'),
+optionsMenu = new Menu('options'),
 game = new GameState('game'),
+levelDisplay = new GameState('level'),
+currLevel = 1,
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
 enemies = [],
@@ -69,10 +74,10 @@ function init() {
 	//canvas.height = document.body.clientHeight;
 
 	// canvas dimensions
-	//var width = 500;
-	//var height = 250;
-	var width  = document.body.clientWidth;
-	var height = document.body.clientHeight;
+	//var width = 1200;
+	//var height = 800;
+	width  = document.body.clientWidth;
+	height = document.body.clientHeight;
 
 	//
 	// HiDef Canvas
@@ -109,11 +114,10 @@ function init() {
 	//load enemies for state game?
 	for (var i = 0; i < 5; i++) {
 
-
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
 		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = canvas.width - 50;
+		jagwar.pos.x = width - 50;
 		jagwar.pos.y = 45 + (100 * i);
 		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
@@ -125,7 +129,7 @@ function init() {
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
 		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = canvas.width + 150;
+		jagwar.pos.x = width + 50;
 		jagwar.pos.y = 20 + (100 * j);
 		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
@@ -231,12 +235,6 @@ function init() {
 /******************************************************************************
 Start Menu
 ******************************************************************************/
-
-	//
-	// Test game state alet
-	//
-	var alertTest = new GameState('alert');
-
 	var startCtrl = new Control('start', 'New Game'),
 			optionsCtrl = new Control('options', 'Options'),
 			quitCtrl = new Control('quit', 'Quit Game');
@@ -270,26 +268,26 @@ Start Menu
 		startMenu.changeSelected('down');
 	});
 
-	startMenu.addControlObj(startCtrl, function() {
 
+	startMenu.addControlObj(startCtrl, function() {
 		//should initialize state game as if just starting for the first time
-		currState = Input.useState(game);
-		Renderer.useState(game);
+		levelDisplay.showAlert('Level 1', {
+			complete: function() {
+
+				//TODO Works, but need to re-initialize main game state
+				currState = Input.useState(game);
+				Renderer.useState(game);
+			}
+		});
+		currState = Input.useState(levelDisplay);
+		Renderer.useState(levelDisplay);
 	});
 
 	startMenu.addControlObj(optionsCtrl, function() {
 		//console.log('Options Selected');
-
-		alertTest.setAlert('Level 1', {
-			complete: function() {
-
-				//TODO Works, but need to re-initialize main game state
-				//currState = Input.useState(game);
-				//Renderer.useState(game);
-			}
-		});
-		currState = Input.useState(alertTest);
-		Renderer.useState(alertTest);
+		optionsMenu.plainText = 'Options Menu';
+		currState = Input.useState(optionsMenu);
+		Renderer.useState(optionsMenu)
 	});
 
 	startMenu.addControlObj(quitCtrl, function() {
@@ -334,6 +332,48 @@ function update(timestamp) {
 
 	//update the current state
 	currState.update(dt);
+
+	//handle switching to next state if currState.enemies.length === 0;
+	if (game.enemies.length <= 0) {
+		//clear enemies container
+		enemies.length = 0;
+		for (var i = 0; i < 5; i++) {
+
+			var jagwar = new Enemy();
+			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
+			jagwar.pos.x = canvas.width - 50;
+			jagwar.pos.y = 45 + (100 * i);
+			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
+			jagwar.addAABB(0,0, 150, 63);
+
+			enemies.push(jagwar);
+		}
+
+		for (var j = 0; j < 5; j++) {
+			var jagwar = new Enemy();
+			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
+			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
+			jagwar.pos.x = width + 50;
+			jagwar.pos.y = 20 + (100 * j);
+			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
+			jagwar.addAABB(0,0, 150, 63);
+
+			enemies.push(jagwar);
+
+		}
+		game.addEnemyToState(enemies);
+		currLevel++;
+
+		levelDisplay.showAlert(('Level ' + currLevel), {
+			complete: function() {
+				currState = Input.useState(game);
+				Renderer.useState(game);
+			}
+		});
+		currState = Input.useState(levelDisplay);
+		Renderer.useState(levelDisplay);
+	}
 
 	//draw the game
 	Renderer.draw();

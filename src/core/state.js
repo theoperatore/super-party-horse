@@ -178,7 +178,7 @@ State.prototype.addOptionalRendering = function(callback) {
 //
 // Set alert text and options
 //
-State.prototype.setAlert = function(text, options) {
+State.prototype.showAlert = function(text, options) {
   this.alert.text = text;
   this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
   this.alert.alpha = (options && options.alpha) ? options.alpha : 1;
@@ -361,8 +361,8 @@ State.prototype.draw = function(rend) {
     //draw basic text to the screen
     if (this.plainText != null) {
       rend.ctx.beginPath();
-      rend.ctx.font = "lighter 25pt Helvetica Neue,sans-serif";
-      rend.ctx.fillText(this.plainText, 0 ,rend.height / 2);
+      rend.ctx.font = "lighter 64px Helvetica Neue,sans-serif";
+      rend.ctx.fillText(this.plainText, ((rend.width / 2) - rend.ctx.measureText(this.plainText).width / 2) ,rend.height / 2);
     }
 
     //draw a text alert to the screen
