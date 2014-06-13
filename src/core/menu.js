@@ -26,7 +26,7 @@ var Menu = function(name, title) {
 	//private selected control vars
 	this._selectedIndex = 0;
 
-	//indexed by control name
+	//indexed by control name or 0-index
 	this.controls = new ObjArray();
 
 	//the entity that will be the selector
@@ -139,7 +139,7 @@ Menu.prototype.drawFrom = function(rend, direction, totalTime, step) {}
 //
 Menu.prototype.draw = function(rend) {
 
-	//draw super class
+	//draw super class -- state
 	this.constructor.prototype.draw.call(this, rend);
 
 	//draw title

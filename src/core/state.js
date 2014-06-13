@@ -175,9 +175,11 @@ State.prototype.addOptionalRendering = function(callback) {
 	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
 };
 
+// ****************************************************************************
 //
 // Set alert text and options
 //
+// ****************************************************************************
 State.prototype.showAlert = function(text, options) {
   this.alert.text = text;
   this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
@@ -188,10 +190,12 @@ State.prototype.showAlert = function(text, options) {
   this.alert.complete = (options && options.complete) ? options.complete : null;
 }
 
+// ****************************************************************************
 //
 // Update this state's assets: scenery, npcs, interactables, enemies, player
 // hud, alert
 //
+// ****************************************************************************
 State.prototype.update = function(dt) {
 
   //update alert text only
@@ -206,20 +210,19 @@ State.prototype.update = function(dt) {
               g = parseInt((this.alert.baseStyle.substring(3,5)), 16),
               b = parseInt((this.alert.baseStyle.substring(5,7)), 16);
 
-          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+          this.alert.style = "rgba("+r+","+g+","+b+","+this.alert.alpha+")";
         }
         else if (this.alert.baseStyle.length === 4) {
           var r = parseInt((this.alert.baseStyle.substring(1,2) + this.alert.baseStyle.substring(1,2)), 16),
               g = parseInt((this.alert.baseStyle.substring(2,3) + this.alert.baseStyle.substring(2,3)), 16),
               b = parseInt((this.alert.baseStyle.substring(3,4) + this.alert.baseStyle.substring(3,4)), 16);
 
-          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+          this.alert.style = "rgba("+r+","+g+","+b+","+this.alert.alpha+")";
         }
       }
 
       //check for completeness
-      var curr = this.alert.alpha;
-      if ((curr - 0.01) <= 0) {
+      if ((this.alert.alpha - 0.01) <= 0) {
         this.alert.text = null;
         if (typeof this.alert.complete === 'function') {
           this.alert.complete();
@@ -286,9 +289,11 @@ State.prototype.update = function(dt) {
   }
 }
 
+// ****************************************************************************
 //
 // Renders this gamestate to the given renderer rend context
 //
+// ****************************************************************************
 State.prototype.draw = function(rend) {
 
   if (rend.ctx != null) {

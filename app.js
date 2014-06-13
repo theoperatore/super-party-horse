@@ -864,8 +864,7 @@ State.prototype.update = function(dt) {
       }
 
       //check for completeness
-      var curr = this.alert.alpha;
-      if ((curr - 0.01) <= 0) {
+      if ((this.alert.alpha - 0.01) <= 0) {
         this.alert.text = null;
         if (typeof this.alert.complete === 'function') {
           this.alert.complete();
@@ -1770,7 +1769,7 @@ function init() {
 		var jagwar = new Enemy();
 		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
 		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = width + 150;
+		jagwar.pos.x = width + 50;
 		jagwar.pos.y = 20 + (100 * j);
 		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 		jagwar.addAABB(0,0, 150, 63);
@@ -1995,7 +1994,7 @@ function update(timestamp) {
 			var jagwar = new Enemy();
 			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
 			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-			jagwar.pos.x = width + 150;
+			jagwar.pos.x = width + 50;
 			jagwar.pos.y = 20 + (100 * j);
 			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
 			jagwar.addAABB(0,0, 150, 63);

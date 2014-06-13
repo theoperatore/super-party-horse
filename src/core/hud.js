@@ -1,7 +1,16 @@
-/******************************************************************************
+//*****************************************************************************
+//
+// Handles drawing the Heads-Up Display for the player
+//
+//*****************************************************************************
+var Hud = function(width, height) {
+	this.width = width || 100;
+	this.height = height || 100;
+}
 
-Functions to handle rendering hud elements that are interactable by firing 
-events to be handled by another class...possibly collision.js or different 
-file: resolve.js
+//
+// Handles drawing the hud to the screen
+//
+Hud.prototype.draw = function(ctx) {
 
-******************************************************************************/
+}
