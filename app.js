@@ -65,7 +65,7 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":16}],2:[function(require,module,exports){
+},{"../utilities/vector2D":17}],2:[function(require,module,exports){
 var Vector2D = require('../../utilities/vector2D');
 
 //
@@ -165,7 +165,7 @@ Control.prototype.draw = function(ctx) {
 //export constructor
 module.exports = Control;
 
-},{"../../utilities/vector2D":16}],3:[function(require,module,exports){
+},{"../../utilities/vector2D":17}],3:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -431,7 +431,7 @@ var Menu = function(name, title) {
 	//private selected control vars
 	this._selectedIndex = 0;
 
-	//indexed by control name
+	//indexed by control name or 0-index
 	this.controls = new ObjArray();
 
 	//the entity that will be the selector
@@ -544,7 +544,7 @@ Menu.prototype.drawFrom = function(rend, direction, totalTime, step) {}
 //
 Menu.prototype.draw = function(rend) {
 
-	//draw super class
+	//draw super class -- state
 	this.constructor.prototype.draw.call(this, rend);
 
 	//draw title
@@ -570,7 +570,7 @@ Menu.prototype.draw = function(rend) {
 //export constructor
 module.exports = Menu;
 
-},{"../entity/entity":11,"../utilities/objarray":14,"../utilities/vector2D":16,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
+},{"../entity/entity":11,"../utilities/objarray":15,"../utilities/vector2D":17,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -821,9 +821,11 @@ State.prototype.addOptionalRendering = function(callback) {
 	this.optionalRenderingFunction = (typeof callback === 'function') ? callback : null;
 };
 
+// ****************************************************************************
 //
 // Set alert text and options
 //
+// ****************************************************************************
 State.prototype.showAlert = function(text, options) {
   this.alert.text = text;
   this.alert.font = (options && options.font) ? options.font : "bold 128px Helvetica Neue, sans-serif";
@@ -834,10 +836,12 @@ State.prototype.showAlert = function(text, options) {
   this.alert.complete = (options && options.complete) ? options.complete : null;
 }
 
+// ****************************************************************************
 //
 // Update this state's assets: scenery, npcs, interactables, enemies, player
 // hud, alert
 //
+// ****************************************************************************
 State.prototype.update = function(dt) {
 
   //update alert text only
@@ -852,14 +856,14 @@ State.prototype.update = function(dt) {
               g = parseInt((this.alert.baseStyle.substring(3,5)), 16),
               b = parseInt((this.alert.baseStyle.substring(5,7)), 16);
 
-          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+          this.alert.style = "rgba("+r+","+g+","+b+","+this.alert.alpha+")";
         }
         else if (this.alert.baseStyle.length === 4) {
           var r = parseInt((this.alert.baseStyle.substring(1,2) + this.alert.baseStyle.substring(1,2)), 16),
               g = parseInt((this.alert.baseStyle.substring(2,3) + this.alert.baseStyle.substring(2,3)), 16),
               b = parseInt((this.alert.baseStyle.substring(3,4) + this.alert.baseStyle.substring(3,4)), 16);
 
-          this.alert.style = "rgba("+r+","+b+","+b+","+this.alert.alpha+")";
+          this.alert.style = "rgba("+r+","+g+","+b+","+this.alert.alpha+")";
         }
       }
 
@@ -931,9 +935,11 @@ State.prototype.update = function(dt) {
   }
 }
 
+// ****************************************************************************
 //
 // Renders this gamestate to the given renderer rend context
 //
+// ****************************************************************************
 State.prototype.draw = function(rend) {
 
   if (rend.ctx != null) {
@@ -1459,7 +1465,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../core/boundingbox":1,"../utilities/vector2D":16,"./animation":8}],12:[function(require,module,exports){
+},{"../core/boundingbox":1,"../utilities/vector2D":17,"./animation":8}],12:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -1638,20 +1644,93 @@ Player.prototype.draw = function(ctx) {
 module.exports = Player;
 
 },{"../core/boundingbox.js":1,"./entity":11}],13:[function(require,module,exports){
+var Player = require('../entity/player'),
+		Attack = require('../entity/attack');
+
+//self invoking to load
+module.exports = (function() {
+
+	var player = new Player(),
+			basicAttack = new Attack();
+
+	//set up player
+	player.pos.y = 100;
+	player.pos.x = 100;
+
+	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000);
+	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000);
+
+	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400);
+	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400);
+
+	//walk animations
+	player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250);
+	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+	player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
+	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+
+	//setup basic attack
+	basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
+	basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
+
+	//configure basic attack
+	basicAttack.realX = player.pos.x;
+	basicAttack.realY = player.pos.y;
+	basicAttack.objX = 150;
+	basicAttack.objY = 20;
+	basicAttack.addAABB(0,0,63,51);
+
+	//add basic attack to player
+	player.addAttack('basic', basicAttack);
+
+	player.addAnimationCompletedCallback('attack-right', function() {
+		console.log('attack-right completed');
+		player.setDirection('right');
+		player.state = 'idle';
+		player.removeAttack('basic');
+	});
+
+	//not used anymore -- direction lock on right
+	player.addAnimationCompletedCallback('attack-left', function() {
+		console.log('attack-left completed');
+		//player.dirLock = false;
+		//player.direction = 'left';
+		player.setDirection('right');
+		player.state = 'idle';
+		player.removeAttack('basic');
+	});
+
+	player.setAnimationLoop('attack-left', false);
+	player.setAnimationLoop('attack-right', false);
+
+	player.direction = "right";
+
+
+	player.addAABB(
+		0,   //x coord of bounding box in object space
+		0,   //y coord of bounding box in object space
+		126.5, //width of bounding box
+		125 //height of bounding box
+	);
+
+	return player;
+})();
+
+},{"../entity/attack":9,"../entity/player":12}],14:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
 
 ******************************************************************************/
 var canvas = document.getElementById('playground'),
-	ctx = canvas.getContext("2d"),
-	now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
-	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
-	dt = 0,
-	currState,
-	anim,
-	width,
-	height,
+ctx = canvas.getContext("2d"),
+now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+dt = 0,
+currState,
+anim,
+width,
+height,
 
 /******************************************************************************
 
@@ -1742,7 +1821,7 @@ function init() {
 	Input.init();
 
 	//load player
-	player = Resource.loadPlayerDefinition();
+	player = require('./game/player');
 	player.setInputMap(PLAYER_INPUT_MAP);
 	player.direction = 'right';
 	player.dirLock = true;
@@ -2025,7 +2104,7 @@ init();
 //start main game!
 anim = requestAnimationFrame(update);
 
-},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./utilities/resource":15}],14:[function(require,module,exports){
+},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./game/player":13,"./utilities/resource":16}],15:[function(require,module,exports){
 //
 // A DataStructure that allows for a string and an integer to be the keys in a
 // collection
@@ -2101,7 +2180,7 @@ ObjArray.prototype.length = function() {
 //export constructor
 module.exports = ObjArray;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var Player = require('../entity/player'),
     AABB = require('../core/boundingbox'),
     Entity = require('../entity/entity'),
@@ -2213,7 +2292,7 @@ exports.loadEnemyDefinition = function(numEnemies) {
 
 }
 
-},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],16:[function(require,module,exports){
+},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],17:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -2313,4 +2392,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[13])
+},{}]},{},[14])

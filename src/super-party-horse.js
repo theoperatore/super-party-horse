@@ -4,14 +4,14 @@
 
 ******************************************************************************/
 var canvas = document.getElementById('playground'),
-	ctx = canvas.getContext("2d"),
-	now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
-	prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
-	dt = 0,
-	currState,
-	anim,
-	width,
-	height,
+ctx = canvas.getContext("2d"),
+now = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+prev = (typeof performance !== 'undefined') ? performance.now() : +new Date,
+dt = 0,
+currState,
+anim,
+width,
+height,
 
 /******************************************************************************
 
@@ -102,7 +102,7 @@ function init() {
 	Input.init();
 
 	//load player
-	player = Resource.loadPlayerDefinition();
+	player = require('./game/player');
 	player.setInputMap(PLAYER_INPUT_MAP);
 	player.direction = 'right';
 	player.dirLock = true;
