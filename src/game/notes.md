@@ -18,7 +18,7 @@ var partyHorse = require('./src/super-party-horse');
 partyHorse.init = function() {
 		//setup instance vars - developer defined/needs to implement draw/update/pollInput methods
 		partyHorse.player  = require('./game/player');
-		partyHorse.enemies = require('./game/enemey')('path/to/first/img.png', 50);
+		partyHorse.enemies = require('./game/enemy')('path/to/first/img.png', 50);
 		partyHorse.npc     = require('./game/npc')('path/to/first/img.png',10);
 
 		//system input setup

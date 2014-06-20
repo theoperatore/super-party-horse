@@ -280,7 +280,13 @@ State.prototype.update = function(dt) {
 
   //update npcs
   if (this.npcs.length > 0) {
+    for (var i = 0; i < this.npcs.length; i++) {
 
+      if (this.npcs[i]) {
+        this.npcs[i].updateRungeKutta(dt);
+      }
+
+    }
   }
 
   //update interactables
@@ -313,7 +319,11 @@ State.prototype.draw = function(rend) {
 
     //draw npcs
     if (this.npcs.length > 0) {
-
+      for (var i = 0; i < this.npcs.length; i++) {
+        if (this.npcs[i]) {
+          this.npcs[i].draw(rend.ctx);
+        }
+      }
     }
 
     //draw interactables ... powerups?

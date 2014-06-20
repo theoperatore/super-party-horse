@@ -31,7 +31,7 @@ var Menu = function(name, title) {
 
 	//the entity that will be the selector
 	this.selector = new Entity();
-	this.selector.addFrame('select','./src/resources/selector.png', 1000);
+	this.selector.addFrame('select','./src/resources/selectors/selector.png', 1000);
 	this.selector.direction = 'select';
 }
 

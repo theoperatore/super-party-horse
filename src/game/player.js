@@ -11,21 +11,21 @@ module.exports = (function() {
 	player.pos.y = 100;
 	player.pos.x = 100;
 
-	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000);
-	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000);
+	player.addFrame('right', "./src/resources/player/donkey-idle-right.png", 1000);
+	player.addFrame('left', "./src/resources/player/donkey-idle-left.png", 1000);
 
-	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400);
-	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400);
+	player.addFrame('attack-right', "./src/resources/player/attack/donkey-attack-end-right.png", 400);
+	player.addFrame('attack-left', "./src/resources/player/attack/donkey-attack-end-left.png", 400);
 
 	//walk animations
-	player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-1.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-2.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-3.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-2.png", 250);
 
 	//setup basic attack
-	basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
-	basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
+	basicAttack.addFrame('attack-right', "./src/resources/player/attack/sound-waves-right.png", 400);
+	basicAttack.addFrame('attack-left', "./src/resources/player/attack/sound-waves-left.png", 400);
 
 	//configure basic attack
 	basicAttack.realX = player.pos.x;

@@ -18,9 +18,7 @@ height,
 	Constructors
 
 ******************************************************************************/
-Entity = require("./entity/entity"),
 GameState = require("./core/state"),
-Enemy = require('./entity/enemy'),
 Control = require('./core/controls/control'),
 Menu = require('./core/menu'),
 
@@ -31,7 +29,15 @@ Menu = require('./core/menu'),
 ******************************************************************************/
 Input = require('./core/input-manager'),
 Renderer = require("./core/renderer"),
-Resource = require('./utilities/resource'),
+CoreTimer = require('./utilities/timer'),
+
+// ****************************************************************************
+//
+// Factories
+//
+// ****************************************************************************
+JaguarFactory = require('./game/enemies/jaguar'),
+CowFactory = require('./game/npcs/cow'),
 
 /******************************************************************************
 
@@ -46,7 +52,8 @@ levelDisplay = new GameState('level'),
 currLevel = 1,
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
-enemies = [],
+enemies,
+npcs,
 
 /******************************************************************************
 
@@ -107,38 +114,13 @@ function init() {
 	player.direction = 'right';
 	player.dirLock = true;
 
-	//set up 'loading' game state
-
-	//set up 'gameover' game state
-
-	//load enemies for state game?
-	for (var i = 0; i < 5; i++) {
-
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = width - 50;
-		jagwar.pos.y = 45 + (100 * i);
-		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-	}
-
-	for (var j = 0; j < 5; j++) {
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = width + 50;
-		jagwar.pos.y = 20 + (100 * j);
-		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-
-	}
-
+	//basic enemies
+	enemies = JaguarFactory.create(10);
 	game.addEnemyToState(enemies);
+
+	//basic npcs
+	npcs = CowFactory.create(10);
+	game.addNPCToState(npcs);
 
 	//input 'right' -- state 'game'
 	game.addInput('right', 68,
@@ -275,6 +257,7 @@ Start Menu
 			complete: function() {
 
 				//TODO Works, but need to re-initialize main game state
+				currLevel = 1;
 				currState = Input.useState(game);
 				Renderer.useState(game);
 			}
@@ -297,12 +280,15 @@ Start Menu
 
 	//set up main game state
 	game.addPlayerToState(player);
-	game.setBackground("./src/resources/grass-background.png");
-	game.setForeground("./src/resources/grass-foreground.png");
+	game.setBackground("./src/resources/scenery/grass-background.png");
+	game.setForeground("./src/resources/scenery/grass-foreground.png");
 
 	//add escape key input to stop animation frames? or go back to title screen
 	Input.addSystemInput('stop', 27, function() {
 		//cancelAnimationFrame(anim);
+
+		currState.player.pos.x = 100;
+		currState.player.pos.y = 100;
 
 		currState = Input.useState(startMenu);
 		Renderer.useState(startMenu);
@@ -335,33 +321,10 @@ function update(timestamp) {
 
 	//handle switching to next state if currState.enemies.length === 0;
 	if (game.enemies.length <= 0) {
+
 		//clear enemies container
 		enemies.length = 0;
-		for (var i = 0; i < 5; i++) {
-
-			var jagwar = new Enemy();
-			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-			jagwar.pos.x = canvas.width - 50;
-			jagwar.pos.y = 45 + (100 * i);
-			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-			jagwar.addAABB(0,0, 150, 63);
-
-			enemies.push(jagwar);
-		}
-
-		for (var j = 0; j < 5; j++) {
-			var jagwar = new Enemy();
-			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-			jagwar.pos.x = width + 50;
-			jagwar.pos.y = 20 + (100 * j);
-			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-			jagwar.addAABB(0,0, 150, 63);
-
-			enemies.push(jagwar);
-
-		}
+		enemies = JaguarFactory.create(10);
 		game.addEnemyToState(enemies);
 		currLevel++;
 
@@ -377,6 +340,9 @@ function update(timestamp) {
 
 	//draw the game
 	Renderer.draw();
+
+	//update all timers
+	CoreTimer.update(1);
 }
 
 //initialize game

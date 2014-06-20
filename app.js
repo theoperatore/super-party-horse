@@ -65,7 +65,7 @@ AABB.prototype.updatePos = function(realX, realY) {
 //export the constructor
 module.exports = AABB;
 
-},{"../utilities/vector2D":17}],2:[function(require,module,exports){
+},{"../utilities/vector2D":19}],2:[function(require,module,exports){
 var Vector2D = require('../../utilities/vector2D');
 
 //
@@ -165,7 +165,7 @@ Control.prototype.draw = function(ctx) {
 //export constructor
 module.exports = Control;
 
-},{"../../utilities/vector2D":17}],3:[function(require,module,exports){
+},{"../../utilities/vector2D":19}],3:[function(require,module,exports){
 /******************************************************************************
 
 Handles loading stationary images such as backgrounds, backdrops,
@@ -436,7 +436,7 @@ var Menu = function(name, title) {
 
 	//the entity that will be the selector
 	this.selector = new Entity();
-	this.selector.addFrame('select','./src/resources/selector.png', 1000);
+	this.selector.addFrame('select','./src/resources/selectors/selector.png', 1000);
 	this.selector.direction = 'select';
 }
 
@@ -570,7 +570,7 @@ Menu.prototype.draw = function(rend) {
 //export constructor
 module.exports = Menu;
 
-},{"../entity/entity":11,"../utilities/objarray":15,"../utilities/vector2D":17,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
+},{"../entity/entity":11,"../utilities/objarray":17,"../utilities/vector2D":19,"./controls/control":2,"./state":7}],6:[function(require,module,exports){
 /******************************************************************************
 
 Functions to render everything to the screen.
@@ -926,7 +926,13 @@ State.prototype.update = function(dt) {
 
   //update npcs
   if (this.npcs.length > 0) {
+    for (var i = 0; i < this.npcs.length; i++) {
 
+      if (this.npcs[i]) {
+        this.npcs[i].updateRungeKutta(dt);
+      }
+
+    }
   }
 
   //update interactables
@@ -959,7 +965,11 @@ State.prototype.draw = function(rend) {
 
     //draw npcs
     if (this.npcs.length > 0) {
-
+      for (var i = 0; i < this.npcs.length; i++) {
+        if (this.npcs[i]) {
+          this.npcs[i].draw(rend.ctx);
+        }
+      }
     }
 
     //draw interactables ... powerups?
@@ -1349,6 +1359,17 @@ Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
 	}
 };
 
+//*****************************************************************************
+//
+// Add AABB to this entity
+//
+//*****************************************************************************
+Entity.prototype.addAABB = function(x,y, width, height) {
+	var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+	this.aabbs.push(box);
+}
+
 /******************************************************************************
 
 Sets the new direction and resets the preveious direction's animation
@@ -1465,7 +1486,7 @@ Entity.prototype.draw = function(ctx) {
 //export the Entity constructor
 module.exports = Entity;
 
-},{"../core/boundingbox":1,"../utilities/vector2D":17,"./animation":8}],12:[function(require,module,exports){
+},{"../core/boundingbox":1,"../utilities/vector2D":19,"./animation":8}],12:[function(require,module,exports){
 var Entity = require('./entity'),
 		AABB = require('../core/boundingbox.js');
 
@@ -1644,6 +1665,70 @@ Player.prototype.draw = function(ctx) {
 module.exports = Player;
 
 },{"../core/boundingbox.js":1,"./entity":11}],13:[function(require,module,exports){
+var Enemy = require('../../entity/enemy'),
+		enemies = [];
+
+//load a predefined jaguar, 'count' number of times
+exports.create = function(count) {
+	count   = count || 1;
+
+	for (var i = 0; i < count; i++) {
+			var jagwar = new Enemy();
+
+			jagwar.addFrame('left', './src/resources/enemies/jagwar-left.png', 300);
+			jagwar.addFrame('left', './src/resources/enemies/jagwar-left-2.png', 300);
+
+			jagwar.pos.x = (i % 2 === 0) ? 1000 - 50 : 1000 + 50;
+			jagwar.pos.y = Math.random() * 350;
+			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
+			jagwar.addAABB(0,0, 150, 63);
+
+			enemies.push(jagwar);
+
+	}
+
+	return enemies;
+}
+
+},{"../../entity/enemy":10}],14:[function(require,module,exports){
+var Entity = require('../../entity/entity'),
+		npcs = [];
+
+
+exports.create = function(count) {
+
+	count = count || 1;
+
+	for (var i = 0; i < count; i++) {
+
+		var npc = new Entity();
+
+		npc.addFrame('right', './src/resources/npcs/cow-right-1.png', 300);
+		npc.addFrame('right', './src/resources/npcs/cow-right-base.png', 300);
+		npc.addFrame('right', './src/resources/npcs/cow-right-2.png', 300);
+		npc.addFrame('right', './src/resources/npcs/cow-right-base.png', 300);
+
+		npc.addFrame('left', './src/resources/npcs/cow-left-1.png', 300);
+		npc.addFrame('left', './src/resources/npcs/cow-left-base.png', 300);
+		npc.addFrame('left', './src/resources/npcs/cow-left-2.png', 300);
+		npc.addFrame('left', './src/resources/npcs/cow-left-base.png', 300);
+
+		npc.pos.x = 10 + Math.random() * 20;
+		npc.pos.y = 10 + Math.random() * 650;
+
+		npc.addAABB(0,0, 150, 150);
+
+		npc.direction = 'right';
+
+		npcs.push(npc);
+
+	}
+
+
+	return npcs;
+}
+
+},{"../../entity/entity":11}],15:[function(require,module,exports){
 var Player = require('../entity/player'),
 		Attack = require('../entity/attack');
 
@@ -1657,21 +1742,21 @@ module.exports = (function() {
 	player.pos.y = 100;
 	player.pos.x = 100;
 
-	player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000);
-	player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000);
+	player.addFrame('right', "./src/resources/player/donkey-idle-right.png", 1000);
+	player.addFrame('left', "./src/resources/player/donkey-idle-left.png", 1000);
 
-	player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400);
-	player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400);
+	player.addFrame('attack-right', "./src/resources/player/attack/donkey-attack-end-right.png", 400);
+	player.addFrame('attack-left', "./src/resources/player/attack/donkey-attack-end-left.png", 400);
 
 	//walk animations
-	player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
-	player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-1.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-2.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-3.png", 250);
+	player.addFrame('walk-right', "./src/resources/player/donkey-walk-2.png", 250);
 
 	//setup basic attack
-	basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
-	basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
+	basicAttack.addFrame('attack-right', "./src/resources/player/attack/sound-waves-right.png", 400);
+	basicAttack.addFrame('attack-left', "./src/resources/player/attack/sound-waves-left.png", 400);
 
 	//configure basic attack
 	basicAttack.realX = player.pos.x;
@@ -1716,7 +1801,7 @@ module.exports = (function() {
 	return player;
 })();
 
-},{"../entity/attack":9,"../entity/player":12}],14:[function(require,module,exports){
+},{"../entity/attack":9,"../entity/player":12}],16:[function(require,module,exports){
 /******************************************************************************
 
 	Core Vars
@@ -1737,9 +1822,7 @@ height,
 	Constructors
 
 ******************************************************************************/
-Entity = require("./entity/entity"),
 GameState = require("./core/state"),
-Enemy = require('./entity/enemy'),
 Control = require('./core/controls/control'),
 Menu = require('./core/menu'),
 
@@ -1750,7 +1833,15 @@ Menu = require('./core/menu'),
 ******************************************************************************/
 Input = require('./core/input-manager'),
 Renderer = require("./core/renderer"),
-Resource = require('./utilities/resource'),
+CoreTimer = require('./utilities/timer'),
+
+// ****************************************************************************
+//
+// Factories
+//
+// ****************************************************************************
+JaguarFactory = require('./game/enemies/jaguar'),
+CowFactory = require('./game/npcs/cow'),
 
 /******************************************************************************
 
@@ -1765,7 +1856,8 @@ levelDisplay = new GameState('level'),
 currLevel = 1,
 loading = new GameState('loading'),
 gameover = new GameState('gameover'),
-enemies = [],
+enemies,
+npcs,
 
 /******************************************************************************
 
@@ -1826,38 +1918,13 @@ function init() {
 	player.direction = 'right';
 	player.dirLock = true;
 
-	//set up 'loading' game state
-
-	//set up 'gameover' game state
-
-	//load enemies for state game?
-	for (var i = 0; i < 5; i++) {
-
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = width - 50;
-		jagwar.pos.y = 45 + (100 * i);
-		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-	}
-
-	for (var j = 0; j < 5; j++) {
-		var jagwar = new Enemy();
-		jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-		jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-		jagwar.pos.x = width + 50;
-		jagwar.pos.y = 20 + (100 * j);
-		jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-		jagwar.addAABB(0,0, 150, 63);
-
-		enemies.push(jagwar);
-
-	}
-
+	//basic enemies
+	enemies = JaguarFactory.create(10);
 	game.addEnemyToState(enemies);
+
+	//basic npcs
+	npcs = CowFactory.create(10);
+	game.addNPCToState(npcs);
 
 	//input 'right' -- state 'game'
 	game.addInput('right', 68,
@@ -1994,6 +2061,7 @@ Start Menu
 			complete: function() {
 
 				//TODO Works, but need to re-initialize main game state
+				currLevel = 1;
 				currState = Input.useState(game);
 				Renderer.useState(game);
 			}
@@ -2016,12 +2084,15 @@ Start Menu
 
 	//set up main game state
 	game.addPlayerToState(player);
-	game.setBackground("./src/resources/grass-background.png");
-	game.setForeground("./src/resources/grass-foreground.png");
+	game.setBackground("./src/resources/scenery/grass-background.png");
+	game.setForeground("./src/resources/scenery/grass-foreground.png");
 
 	//add escape key input to stop animation frames? or go back to title screen
 	Input.addSystemInput('stop', 27, function() {
 		//cancelAnimationFrame(anim);
+
+		currState.player.pos.x = 100;
+		currState.player.pos.y = 100;
 
 		currState = Input.useState(startMenu);
 		Renderer.useState(startMenu);
@@ -2054,33 +2125,10 @@ function update(timestamp) {
 
 	//handle switching to next state if currState.enemies.length === 0;
 	if (game.enemies.length <= 0) {
+
 		//clear enemies container
 		enemies.length = 0;
-		for (var i = 0; i < 5; i++) {
-
-			var jagwar = new Enemy();
-			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-			jagwar.pos.x = canvas.width - 50;
-			jagwar.pos.y = 45 + (100 * i);
-			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-			jagwar.addAABB(0,0, 150, 63);
-
-			enemies.push(jagwar);
-		}
-
-		for (var j = 0; j < 5; j++) {
-			var jagwar = new Enemy();
-			jagwar.addFrame('left', './src/resources/jagwar-left.png', 300);
-			jagwar.addFrame('left', './src/resources/jagwar-left-2.png', 300);
-			jagwar.pos.x = width + 50;
-			jagwar.pos.y = 20 + (100 * j);
-			jagwar.accel.x = -0.00002 + (Math.random() * -0.00001);
-			jagwar.addAABB(0,0, 150, 63);
-
-			enemies.push(jagwar);
-
-		}
+		enemies = JaguarFactory.create(10);
 		game.addEnemyToState(enemies);
 		currLevel++;
 
@@ -2096,6 +2144,9 @@ function update(timestamp) {
 
 	//draw the game
 	Renderer.draw();
+
+	//update all timers
+	CoreTimer.update(1);
 }
 
 //initialize game
@@ -2104,7 +2155,7 @@ init();
 //start main game!
 anim = requestAnimationFrame(update);
 
-},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./entity/enemy":10,"./entity/entity":11,"./game/player":13,"./utilities/resource":16}],15:[function(require,module,exports){
+},{"./core/controls/control":2,"./core/input-manager":4,"./core/menu":5,"./core/renderer":6,"./core/state":7,"./game/enemies/jaguar":13,"./game/npcs/cow":14,"./game/player":15,"./utilities/timer":18}],17:[function(require,module,exports){
 //
 // A DataStructure that allows for a string and an integer to be the keys in a
 // collection
@@ -2180,119 +2231,72 @@ ObjArray.prototype.length = function() {
 //export constructor
 module.exports = ObjArray;
 
-},{}],16:[function(require,module,exports){
-var Player = require('../entity/player'),
-    AABB = require('../core/boundingbox'),
-    Entity = require('../entity/entity'),
-    Attack = require('../entity/attack');
+},{}],18:[function(require,module,exports){
+//
+// A timer that counts a number of ticks, and after a designated amount calls a
+// function and removes the timer from the updating list.
+// Primarily used to count core updates.
+//
+// Pitfalls of a core update counter is that it depends on the speed of the
+// update function for the game loop. This timer assumes that the time between
+// update calls is the same, which isn't necessarily the case.
+//
+var _timers = [];
 
-/******************************************************************************
+//
+// Sets up a function to be called after the allotted time has passed.
+//
+exports.after = function(time, t_callback) {
 
-Manages the importing / creation of Entities from JSON files
-
-******************************************************************************/
-exports.loadResourceFile = function(path) {
-
-
-
-}
-
-/******************************************************************************
-
-Exports the given object as a resource file
-
-******************************************************************************/
-exports.exportObject = function(obj) {
-
-
-
-}
-
-/******************************************************************************
-
-Loads and returns a player object based on the included definitions
-
-******************************************************************************/
-exports.loadPlayerDefinition = function() {
-
-  var player = new Player(),
-      basicAttack = new Attack();
-
-  //set up player
-  player.pos.y = 100;
-  player.pos.x = 100;
-
-  player.addFrame('right', "./src/resources/donkey-idle-right.png", 1000);
-  player.addFrame('left', "./src/resources/donkey-idle-left.png", 1000);
-
-  player.addFrame('attack-right', "./src/resources/attack/donkey-attack-end-right.png", 400);
-  player.addFrame('attack-left', "./src/resources/attack/donkey-attack-end-left.png", 400);
-
-  //walk animations
-  player.addFrame('walk-right', "./src/resources/donkey-walk-1.png", 250);
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
-  player.addFrame('walk-right', "./src/resources/donkey-walk-3.png", 250);
-  player.addFrame('walk-right', "./src/resources/donkey-walk-2.png", 250);
-
-  //setup basic attack
-  basicAttack.addFrame('attack-right', "./src/resources/attack/sound-waves-right.png", 400);
-  basicAttack.addFrame('attack-left', "./src/resources/attack/sound-waves-left.png", 400);
-
-  //configure basic attack
-  basicAttack.realX = player.pos.x;
-  basicAttack.realY = player.pos.y;
-  basicAttack.objX = 150;
-  basicAttack.objY = 20;
-  basicAttack.addAABB(0,0,63,51);
-
-  //add basic attack to player
-  player.addAttack('basic', basicAttack);
-
-  player.addAnimationCompletedCallback('attack-right', function() {
-    console.log('attack-right completed');
-    player.setDirection('right');
-    player.state = 'idle';
-    player.removeAttack('basic');
-  });
-
-  //not used anymore -- direction lock on right
-  player.addAnimationCompletedCallback('attack-left', function() {
-    console.log('attack-left completed');
-    //player.dirLock = false;
-    //player.direction = 'left';
-    player.setDirection('right');
-    player.state = 'idle';
-    player.removeAttack('basic');
-  });
-
-  player.setAnimationLoop('attack-left', false);
-  player.setAnimationLoop('attack-right', false);
-
-  player.direction = "right";
-
-
-  player.addAABB(
-    0,   //x coord of bounding box in object space
-    0,   //y coord of bounding box in object space
-    126.5, //width of bounding box
-    125 //height of bounding box
-  );
-
-  return player;
+	//add a new timer
+	_timers.push(
+		{
+			//converts seconds to ticks: 60 frames = 1 second
+			endTime  : time * 60,
+			currTime : 0,
+			callback : t_callback
+		}
+	);
 
 }
 
-/******************************************************************************
+//
+// Update all timers and if the timer has finished, remove from list and call
+// callback function
+//
+exports.update = function(tick) {
 
-Loads and returns an array of enemies
+	tick  = tick || 1;
 
-******************************************************************************/
-exports.loadEnemyDefinition = function(numEnemies) {
+	for (var i = 0; i < _timers.length; i++) {
 
+		_timers[i].currTime += tick;
 
+		if (_timers[i].currTime >= _timers[i].endTime) {
+
+			var timer = _timers.splice(i,1);
+			timer[0].callback();
+
+		}
+
+	}
 }
 
-},{"../core/boundingbox":1,"../entity/attack":9,"../entity/entity":11,"../entity/player":12}],17:[function(require,module,exports){
+//
+// Removes all active timers
+//
+exports.clear = function() {
+	_timers.length = 0;
+}
+
+//
+// Returns number of timers currently running
+//
+exports.length = function() {
+	return _timers.length;
+}
+
+},{}],19:[function(require,module,exports){
 /******************************************************************************
 
 Defines a 2D vector and basic math operations performed on those vectors.
@@ -2392,4 +2396,4 @@ exports.dotProduct = function(v1,v2) {
 	return ((v1.x * v2.x) + (v1.y * v2.y));
 }
 
-},{}]},{},[14])
+},{}]},{},[16])

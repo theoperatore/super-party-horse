@@ -82,6 +82,17 @@ Entity.prototype.addAnimationCompletedCallback = function(anim, callback) {
 	}
 };
 
+//*****************************************************************************
+//
+// Add AABB to this entity
+//
+//*****************************************************************************
+Entity.prototype.addAABB = function(x,y, width, height) {
+	var box = new AABB(this.pos.x, this.pos.y, x, y, width, height);
+
+	this.aabbs.push(box);
+}
+
 /******************************************************************************
 
 Sets the new direction and resets the preveious direction's animation

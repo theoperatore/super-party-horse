@@ -35,4 +35,4 @@ Emitter.prototype.clone = function() {
 	return new Emitter();
 };
 
-module.exports = new Emitter();
+module.exports = Emitter;
